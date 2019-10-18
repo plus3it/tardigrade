@@ -1,0 +1,6 @@
+partition: aws
+region: us-east-1
+keystore_bucket: tardigrade-keystore
+vpcflowlog_bucket: tardigrade-vpc-flow-log
+cloudtrail_bucket: tardigrade-cloudtrail
+config_bucket: tardigrade-config
