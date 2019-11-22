@@ -1,0 +1,26 @@
+main:
+  - title: "Home"
+    url: /
+  - title: "How-To-Guide"
+    url: /how-to-guide/
+  - title: "Structure"
+    url: /structure/
+  - title: "FAQs"
+    url: /frequently-asked-questions/
+
+# documentation links
+docs:
+  - title: Getting Started
+    children:
+      - title: "How-To-Guide"
+        url: /how-to-guide/
+      - title: "Structure"
+        url: /structure/
+      - title: "FAQs"
+        url: /frequently-asked-questions/
+  - title: Modules
+    children:
+      - title: "GitHub"
+        url: https://github.com/search?q=org%3Aplus3it+tardigrade
+      - title: "Terraform Registry"
+        url: https://registry.terraform.io/search?q=tardigrade

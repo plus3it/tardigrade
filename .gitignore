@@ -1,4 +1,4 @@
-#  Local .terraform directories
+# Local .terraform directories
 .terraform/
 
 # .tfstate files
@@ -8,5 +8,17 @@
 # .tfvars files
 *.tfvars
 
-# ignore this file
-!tfmodule-template.tf
+# Local .terragrunt-cache directories
+.terragrunt-cache/
+
+# Terragrunt files copied by hooks
+tardigrade/aws/**/tenant.tf
+
+# Jekyll files
+_site/
+.jekyll-cache/
+.sass-cache/
+Gemfile.lock
+
+#rbenv files
+.ruby-version
