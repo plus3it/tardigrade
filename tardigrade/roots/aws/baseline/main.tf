@@ -199,7 +199,7 @@ locals {
   # setup users to be created
   users = [{
     name = "alpha",
-  },{
+    }, {
     name = "beta",
   }]
 }
@@ -334,7 +334,7 @@ module "cloudtrail_bucket" {
 }
 
 module "cloudtrail" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-cloudtrail.git?ref=1.0.1"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-cloudtrail.git?ref=2.2.2"
 
   providers = {
     aws = aws
@@ -416,4 +416,84 @@ module "inspector" {
   name             = "${local.name_tag}-inspector"
   schedule         = "rate(7 days)"
   tags             = local.tags
+}
+
+##### MANAGING DEFAULT RESOURCES #####
+### DEFAULT VPC ###
+data "aws_vpc" "default" {
+  default = true
+}
+
+### DEFAULT SECURITY GROUPS ###
+#default vpc security group
+resource "aws_default_security_group" "default" {
+  vpc_id = data.aws_vpc.default.id
+
+  dynamic "ingress" {
+    for_each = var.default_vpc_sg_ingress_rules
+    content {
+      cidr_blocks      = lookup(ingress.value, "cidr_blocks", null)
+      description      = lookup(ingress.value, "description", null)
+      from_port        = lookup(ingress.value, "from_port", null)
+      ipv6_cidr_blocks = lookup(ingress.value, "ipv6_cidr_blocks", null)
+      prefix_list_ids  = lookup(ingress.value, "prefix_list_ids", null)
+      protocol         = lookup(ingress.value, "protocol", null)
+      security_groups  = lookup(ingress.value, "security_groups", null)
+      self             = lookup(ingress.value, "self", null)
+      to_port          = lookup(ingress.value, "to_port", null)
+    }
+  }
+
+  dynamic "egress" {
+    for_each = var.default_vpc_sg_egress_rules
+    content {
+      cidr_blocks      = lookup(egress.value, "cidr_blocks", null)
+      description      = lookup(egress.value, "description", null)
+      from_port        = lookup(egress.value, "from_port", null)
+      ipv6_cidr_blocks = lookup(egress.value, "ipv6_cidr_blocks", null)
+      prefix_list_ids  = lookup(egress.value, "prefix_list_ids", null)
+      protocol         = lookup(egress.value, "protocol", null)
+      security_groups  = lookup(egress.value, "security_groups", null)
+      self             = lookup(egress.value, "self", null)
+      to_port          = lookup(egress.value, "to_port", null)
+    }
+  }
+  revoke_rules_on_delete = var.default_vpc_revoke_rules_on_delete
+  tags                   = var.tags
+}
+
+resource "aws_default_security_group" "this" {
+  vpc_id = module.vpc.vpc_id
+
+  dynamic "ingress" {
+    for_each = var.vpc_module_sg_ingress_rules
+    content {
+      cidr_blocks      = lookup(ingress.value, "cidr_blocks", null)
+      description      = lookup(ingress.value, "description", null)
+      from_port        = lookup(ingress.value, "from_port", null)
+      ipv6_cidr_blocks = lookup(ingress.value, "ipv6_cidr_blocks", null)
+      prefix_list_ids  = lookup(ingress.value, "prefix_list_ids", null)
+      protocol         = lookup(ingress.value, "protocol", null)
+      security_groups  = lookup(ingress.value, "security_groups", null)
+      self             = lookup(ingress.value, "self", null)
+      to_port          = lookup(ingress.value, "to_port", null)
+    }
+  }
+
+  dynamic "egress" {
+    for_each = var.vpc_module_sg_egress_rules
+    content {
+      cidr_blocks      = lookup(egress.value, "cidr_blocks", null)
+      description      = lookup(egress.value, "description", null)
+      from_port        = lookup(egress.value, "from_port", null)
+      ipv6_cidr_blocks = lookup(egress.value, "ipv6_cidr_blocks", null)
+      prefix_list_ids  = lookup(egress.value, "prefix_list_ids", null)
+      protocol         = lookup(egress.value, "protocol", null)
+      security_groups  = lookup(egress.value, "security_groups", null)
+      self             = lookup(egress.value, "self", null)
+      to_port          = lookup(egress.value, "to_port", null)
+    }
+  }
+  revoke_rules_on_delete = var.vpc_module_revoke_rules_on_delete
+  tags                   = var.tags
 }
