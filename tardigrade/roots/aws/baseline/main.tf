@@ -76,10 +76,6 @@ locals {
   }
 }
 
-data "aws_caller_identity" "this" {}
-
-data "aws_availability_zones" "all" {}
-
 ##### KEYSTORE #####
 # Keys to be stored in the `keystore` and `keystore_ssm` modules
 locals {
@@ -198,10 +194,14 @@ locals {
 
   # setup users to be created
   users = [{
-    name = "alpha",
-    }, {
-    name = "beta",
+    name        = "support-user",
+    policy_arns = [data.aws_iam_policy.this.arn]
   }]
+}
+
+# get ARN for AWSSupportAccess AWS Managed policy
+data "aws_iam_policy" "this" {
+  arn = "arn:${data.aws_partition.this.partition}:iam::${data.aws_partition.this.partition}:policy/AWSSupportAccess"
 }
 
 module "iam_users" {
@@ -417,6 +417,13 @@ module "inspector" {
   schedule         = "rate(7 days)"
   tags             = local.tags
 }
+
+##### DATA SOURCES #####
+data "aws_caller_identity" "this" {}
+
+data "aws_partition" "this" {}
+
+data "aws_availability_zones" "all" {}
 
 ##### MANAGING DEFAULT RESOURCES #####
 ### DEFAULT VPC ###
