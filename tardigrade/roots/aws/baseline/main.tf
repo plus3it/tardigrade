@@ -30,39 +30,14 @@ locals {
   create_keystore_bucket   = true
   create_config            = ! local.handsoff
   create_config_rules      = ! local.handsoff
-  create_iam_roles         = true
   create_vpc_endpoints     = false
-  create_saml_provider     = true
   create_inspector         = true
-  create_tgw_attachment    = ! local.handsoff
+  create_metric_filter     = true
 
-  # services only in aws partition
-  #   peering connection
-  #   bastion sg
-  #   route53 subzone
-  #   codebuild
-  #   ram resource share
-
-  create_peering_connection        = ! local.handsoff && var.partition == "aws"
-  create_bastion_sg                = ! local.handsoff && var.partition == "aws"
-  create_route53_subzone           = ! local.handsoff && var.partition == "aws"
-  create_route53_query_log         = ! local.handsoff && var.partition == "aws"
-  create_config_authorization      = ! local.handsoff && var.partition == "aws"
-  create_guardduty_member          = ! local.handsoff && var.partition == "aws"
-  create_ram_principal_association = ! local.handsoff && var.partition == "aws"
-  create_resolver_rule_association = ! local.handsoff && var.partition == "aws"
   excluded_config_rules = {
     "handsoff"   = []
     "aws"        = []
     "aws-us-gov" = []
-  }
-  iam_service_url_suffix = {
-    "aws"        = "amazonaws.com"
-    "aws-us-gov" = "amazonaws.com"
-  }
-  iam_saml_audience = {
-    "aws"        = "https://signin.aws.amazon.com/saml"
-    "aws-us-gov" = "https://signin.amazonaws-us-gov.com/saml"
   }
 }
 
@@ -334,7 +309,7 @@ module "cloudtrail_bucket" {
 }
 
 module "cloudtrail" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-cloudtrail.git?ref=2.2.2"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-cloudtrail.git?ref=2.2.3"
 
   providers = {
     aws = aws
@@ -416,6 +391,182 @@ module "inspector" {
   name             = "${local.name_tag}-inspector"
   schedule         = "rate(7 days)"
   tags             = local.tags
+}
+
+##### METRIC FILTERS #####
+locals {
+  # due to limitations in prowlers checking of filter_patterns within metric filters, very long strings
+  # are being used as opposed to heredocs
+  metric_filters = [
+    {
+      name           = "terraform-cis-unauthorized-operations"
+      filter_pattern = "{ ($.errorCode = \"*UnauthorizedOperation\") || ($.errorCode = \"AccessDenied*\") }"
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "Unauthorized Operations"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-console-login-without-mfa"
+      filter_pattern = "{ ($.eventName = \"ConsoleLogin\") && ($.additionalEventData.MFAUsed != \"Yes\") }"
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "Console Logins w/o MFA"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-root-account-usage"
+      filter_pattern = "{ $.userIdentity.type = \"Root\" && $.userIdentity.invokedBy NOT EXISTS && $.eventType != \"AwsServiceEvent\" }"
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "Root Account Usage"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-iam-policy-changes"
+      filter_pattern = "{($.eventName=DeleteGroupPolicy)||($.eventName=DeleteRolePolicy)|| ($.eventName=DeleteUserPolicy) ||($.eventName=PutGroupPolicy) || ($.eventName=PutRolePolicy)|| ($.eventName=PutUserPolicy) ||($.eventName=CreatePolicy) || ($.eventName=DeletePolicy) || ($.eventName=CreatePolicyVersion) ||($.eventName=DeletePolicyVersion) || ($.eventName=AttachRolePolicy) || ($.eventName=DetachRolePolicy) ||($.eventName=AttachUserPolicy) || ($.eventName=DetachUserPolicy) || ($.eventName=AttachGroupPolicy) ||($.eventName=DetachGroupPolicy)}"
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "IAM Policy Changes"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-cloudtrail-configuration-changes"
+      filter_pattern = "{($.eventName = CreateTrail) || ($.eventName = UpdateTrail) || ($.eventName = DeleteTrail) ||($.eventName = StartLogging) || ($.eventName = StopLogging)}"
+
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "CloudTrail Configuration Changes"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-console-authentication-failures"
+      filter_pattern = "{ ($.eventName = ConsoleLogin) && ($.errorMessage = \"Failed authentication\") }"
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "Console Authentication Failures"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-removing-cmks"
+      filter_pattern = "{($.eventSource = kms.amazonaws.com) && (($.eventName=DisableKey)||($.eventName=ScheduleKeyDeletion)) }"
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "Disabling/Scheduled Deletion of CMKs"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-s3-bucket-policy-changes"
+      filter_pattern = "{ ($.eventSource = s3.amazonaws.com) && (($.eventName = PutBucketAcl) || ($.eventName = PutBucketPolicy) ||($.eventName = PutBucketCors) || ($.eventName = PutBucketLifecycle) || ($.eventName = PutBucketReplication) ||($.eventName = DeleteBucketPolicy) || ($.eventName = DeleteBucketCors) || ($.eventName = DeleteBucketLifecycle) ||($.eventName = DeleteBucketReplication)) }"
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "S3 Bucket Policy Changes"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-aws-config-configuration-changes"
+      filter_pattern = "{ ($.eventSource = config.amazonaws.com) && (($.eventName=StopConfigurationRecorder) ||($.eventName=DeleteDeliveryChannel) || ($.eventName=PutDeliveryChannel) ||($.eventName=PutConfigurationRecorder)) }"
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "AWS Config Configuration Changes"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-security-group-changes"
+      filter_pattern = "{ ($.eventName = AuthorizeSecurityGroupIngress) || ($.eventName = AuthorizeSecurityGroupEgress) ||($.eventName = RevokeSecurityGroupIngress) || ($.eventName = RevokeSecurityGroupEgress) ||($.eventName = CreateSecurityGroup) || ($.eventName = DeleteSecurityGroup) }"
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "Security Group Changes"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-nacl-changes"
+      filter_pattern = "{ ($.eventName = CreateNetworkAcl) || ($.eventName = CreateNetworkAclEntry) ||($.eventName = DeleteNetworkAcl) || ($.eventName = DeleteNetworkAclEntry) ||($.eventName = ReplaceNetworkAclEntry) || ($.eventName = ReplaceNetworkAclAssociation) }"
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "NACL Changes"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-network-gateway-changes"
+      filter_pattern = "{ ($.eventName = CreateCustomerGateway) || ($.eventName = DeleteCustomerGateway) ||($.eventName = AttachInternetGateway) ||  ($.eventName = CreateInternetGateway) ||($.eventName = DeleteInternetGateway) || ($.eventName = DetachInternetGateway) }"
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "Network Gateway Changes"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-route-table-changes"
+      filter_pattern = "{ ($.eventName = CreateRoute) || ($.eventName = CreateRouteTable) || ($.eventName = ReplaceRoute) ||($.eventName = ReplaceRouteTableAssociation) || ($.eventName = DeleteRouteTable) ||($.eventName = DeleteRoute) || ($.eventName = DisassociateRouteTable) }"
+
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "Route Table Changes"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    },
+    {
+      name           = "terraform-cis-vpc-changes"
+      filter_pattern = "{ ($.eventName = CreateVpc) || ($.eventName = DeleteVpc) || ($.eventName = ModifyVpcAttribute) ||($.eventName = AcceptVpcPeeringConnection) || ($.eventName = CreateVpcPeeringConnection) ||($.eventName = DeleteVpcPeeringConnection) || ($.eventName = RejectVpcPeeringConnection) ||($.eventName = AttachClassicLinkVpc) || ($.eventName = DetachClassicLinkVpc) ||($.eventName = DisableVpcClassicLink) || ($.eventName = EnableVpcClassicLink) }"
+      log_group_name = module.cloudtrail.log_group.name
+      metric_transformation = {
+        name          = "VPC Changes"
+        namespace     = "CISBenchmark"
+        value         = 1
+        default_value = 0
+      }
+    }
+  ]
+}
+
+module "metric_filters" {
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-cloudwatch-log-metric-filter.git?ref=0.0.0"
+
+  providers = {
+    aws = aws
+  }
+
+  # Member
+  create_metric_filter = local.create_metric_filter
+  metric_filters       = local.metric_filters
 }
 
 ##### DATA SOURCES #####
