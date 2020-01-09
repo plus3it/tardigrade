@@ -33,6 +33,7 @@ locals {
   create_vpc_endpoints     = false
   create_inspector         = true
   create_metric_filter     = true
+  create_metric_alarm      = true
 
   excluded_config_rules = {
     "handsoff"   = []
@@ -567,6 +568,34 @@ module "metric_filters" {
   # Member
   create_metric_filter = local.create_metric_filter
   metric_filters       = local.metric_filters
+}
+
+##### METRIC ALARMS #####
+locals {
+  alarms = [
+    for metric in module.metric_filters.metric_filters :
+    {
+      alarm_name          = metric.name,
+      comparison_operator = "GreaterThanOrEqualToThreshold",
+      evaluation_periods  = "1",
+      metric_name         = metric.metric_transformation[0].name,
+      namespace           = metric.metric_transformation[0].namespace,
+      period              = "300",
+      statistic           = "Sum",
+      threshold           = "1"
+    }
+  ]
+}
+
+module "metric_alarms" {
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-cloudwatch-metric-alarm.git?ref=0.0.0"
+
+  providers = {
+    aws = aws
+  }
+
+  create_metric_alarm = local.create_metric_alarm
+  metric_alarms       = local.alarms
 }
 
 ##### DATA SOURCES #####
