@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 *   Add metric filters
 *   Remove unused variables
 *   Add metric alarms
+*   Remove AWSSupportAccess policy from user and add it to a group instead
 
 ### 0.0.3
 

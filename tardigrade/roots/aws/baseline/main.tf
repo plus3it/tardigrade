@@ -171,13 +171,7 @@ locals {
   # setup users to be created
   users = [{
     name        = "support-user",
-    policy_arns = [data.aws_iam_policy.this.arn]
   }]
-}
-
-# get ARN for AWSSupportAccess AWS Managed policy
-data "aws_iam_policy" "this" {
-  arn = "arn:${data.aws_partition.this.partition}:iam::${data.aws_partition.this.partition}:policy/AWSSupportAccess"
 }
 
 module "iam_users" {
@@ -196,6 +190,33 @@ module "iam_users" {
   users = [for user in local.users : merge(local.user_base, user)]
 
   template_paths = []
+}
+
+# create support-users group
+resource "aws_iam_group" "this" {
+  name = "support-users"
+}
+
+# add created users to the support-users group
+resource "aws_iam_user_group_membership" "this" {
+  for_each = module.iam_users.users
+
+  user = each.value.name
+
+  groups = [
+    aws_iam_group.this.name
+  ]
+}
+
+# get ARN for AWSSupportAccess AWS Managed policy
+data "aws_iam_policy" "this" {
+  arn = "arn:${data.aws_partition.this.partition}:iam::${data.aws_partition.this.partition}:policy/AWSSupportAccess"
+}
+
+# attached policy to support-users group
+resource "aws_iam_group_policy_attachment" "this" {
+  group      = aws_iam_group.this.name
+  policy_arn = data.aws_iam_policy.this.arn
 }
 
 ##### VPC #####
