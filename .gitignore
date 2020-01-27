@@ -22,3 +22,8 @@ Gemfile.lock
 
 #rbenv files
 .ruby-version
+
+# tardigrade-ci
+.tardigrade-ci
+tardigrade-ci/
+
