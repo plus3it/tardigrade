@@ -170,7 +170,7 @@ locals {
 
   # setup users to be created
   users = [{
-    name        = "support-user",
+    name = "support-user",
   }]
 }
 
