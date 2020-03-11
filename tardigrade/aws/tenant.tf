@@ -1,11 +1,11 @@
 terraform {
-  required_version = "0.12.12"
+  required_version = "0.12.23"
 
   backend "s3" {}
 }
 
 provider aws {
-  version = "~> 2.31.0"
+  version = "~> 2.52"
   region  = "${var.region}"
 }
 
@@ -22,7 +22,7 @@ provider template {
 }
 
 provider external {
-  version = "~> 1.0"
+  version = "~> 1.2"
 }
 
 variable "partition" {

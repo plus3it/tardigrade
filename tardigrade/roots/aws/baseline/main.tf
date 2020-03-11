@@ -89,7 +89,7 @@ data "template_file" "keystore_bucket_policy" {
 }
 
 module "keystore_bucket" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-s3-bucket.git?ref=1.0.4"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-s3-bucket.git?ref=1.1.1"
 
   providers = {
     aws = aws
@@ -105,7 +105,7 @@ module "keystore_bucket" {
 }
 
 module "keystore_s3" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-keystore.git?ref=1.0.0"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-keystore.git?ref=1.0.3"
 
   providers = {
     aws = aws
@@ -126,7 +126,7 @@ module "keystore_s3" {
 }
 
 module "keystore_ssm" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-keystore.git?ref=1.0.0"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-keystore.git?ref=1.0.3"
 
   providers = {
     aws = aws
@@ -145,7 +145,7 @@ module "keystore_ssm" {
 
 ##### IAM ALIAS #####
 module "iam_account" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-iam-account.git?ref=1.0.1"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-iam-account.git?ref=1.1.0"
 
   providers = {
     aws = aws
@@ -221,7 +221,7 @@ resource "aws_iam_group_policy_attachment" "this" {
 
 ##### VPC #####
 module "vpc" {
-  source = "github.com/plus3it/terraform-aws-vpc?ref=v2.15.0"
+  source = "github.com/plus3it/terraform-aws-vpc?ref=v2.25.0"
 
   providers = {
     aws = aws
@@ -248,7 +248,7 @@ module "vpc" {
 }
 
 module "vpc_endpoints" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-vpc-endpoints.git?ref=1.0.0"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-vpc-endpoints.git?ref=1.0.2"
 
   providers = {
     aws = aws
@@ -273,7 +273,7 @@ data "template_file" "vpcflowlog_bucket_policy" {
 }
 
 module "vpcflowlog_bucket" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-s3-bucket.git?ref=1.0.4"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-s3-bucket.git?ref=1.1.1"
 
   providers = {
     aws = aws
@@ -289,7 +289,7 @@ module "vpcflowlog_bucket" {
 }
 
 module "vpc_flow_log" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-vpc-flow-log.git?ref=1.0.0"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-vpc-flow-log.git?ref=1.0.2"
 
   providers = {
     aws = aws
@@ -315,7 +315,7 @@ data "template_file" "cloudtrail_bucket_policy" {
 }
 
 module "cloudtrail_bucket" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-s3-bucket.git?ref=1.0.4"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-s3-bucket.git?ref=1.1.1"
 
   providers = {
     aws = aws
@@ -356,7 +356,7 @@ data "template_file" "config_bucket_policy" {
 }
 
 module "config_bucket" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-s3-bucket.git?ref=1.0.4"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-s3-bucket.git?ref=1.1.1"
 
   providers = {
     aws = aws
@@ -385,7 +385,7 @@ module "config" {
 }
 
 module "config_rules" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-config-rules.git?ref=1.0.5"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-config-rules.git?ref=1.0.6"
 
   providers = {
     aws = aws
@@ -402,7 +402,7 @@ module "config_rules" {
 
 ##### INSPECTOR #####
 module "inspector" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-inspector.git?ref=1.0.5"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-inspector.git?ref=1.0.6"
 
   providers = {
     aws = aws
