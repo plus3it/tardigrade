@@ -27,3 +27,5 @@ Gemfile.lock
 .tardigrade-ci
 tardigrade-ci/
 
+# Add local variables file
+!tenant-local.auto.tfvars

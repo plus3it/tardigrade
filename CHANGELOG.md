@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+### 0.0.5
+
+**Commit Delta**: [Change from 0.0.4 release](https://github.com/plus3it/tardigrade/compare/0.0.4...0.0.5)
+
+**Released**: 2020.03.11
+
+**Summary**:
+
+*   Fix missing local variables file
+*   Update module version references
+*   Update terraform provider version
+*   Update aws provider version
+*   Update external provider version
+
 ### 0.0.4
 
 **Commit Delta**: [Change from 0.0.3 release](https://github.com/plus3it/tardigrade/compare/0.0.3...0.0.4)
