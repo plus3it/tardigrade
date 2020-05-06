@@ -6,7 +6,7 @@ sidebar:
 ---
 
 # Overview
-Tardigrade is a mutlicloud account provisioning and maintenance framework built with terragrunt and terraform. Currently, this implementation demonstrates the ability to manage AWS accounts, but can easily be extended to manage accounts on other cloud platforms.
+Tardigrade is a multi-cloud account provisioning and maintenance framework built with Terragrunt and Terraform. Currently, this implementation demonstrates the ability to manage AWS accounts, but can easily be extended to manage accounts on other cloud platforms.
 
 # Prerequisites
 * [terraform >= 0.12](https://www.terraform.io/)
