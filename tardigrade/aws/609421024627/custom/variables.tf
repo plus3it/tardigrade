@@ -11,12 +11,12 @@ variable "stage" {
 }
 
 variable "private_subnets" {
-  type    = list
+  type    = list(any)
   default = []
 }
 
 variable "public_subnets" {
-  type    = list
+  type    = list(any)
   default = []
 }
 
