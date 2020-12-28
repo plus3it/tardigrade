@@ -4,24 +4,24 @@ terraform {
   backend "s3" {}
 }
 
-provider aws {
+provider "aws" {
   version = "~> 2.52"
-  region  = "${var.region}"
+  region  = var.region
 }
 
-provider null {
+provider "null" {
   version = "~> 2.1"
 }
 
-provider random {
+provider "random" {
   version = "~> 2.2"
 }
 
-provider template {
+provider "template" {
   version = "~> 2.1"
 }
 
-provider external {
+provider "external" {
   version = "~> 1.2"
 }
 

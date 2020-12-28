@@ -22,14 +22,14 @@ locals {
   # services common to all account baselines
   create_keystore          = true
   create_iam_account       = true
-  create_vpc               = ! local.handsoff
-  create_vpc_flow_log      = ! local.handsoff
+  create_vpc               = !local.handsoff
+  create_vpc_flow_log      = !local.handsoff
   create_cloudtrail        = true
   create_config_bucket     = true
   create_cloudtrail_bucket = true
   create_keystore_bucket   = true
-  create_config            = ! local.handsoff
-  create_config_rules      = ! local.handsoff
+  create_config            = !local.handsoff
+  create_config_rules      = !local.handsoff
   create_vpc_endpoints     = false
   create_inspector         = true
   create_metric_filter     = true

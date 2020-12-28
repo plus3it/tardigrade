@@ -117,13 +117,13 @@ variable "config_bucket_versioning" {
 ##### SECURITY GROUP VARIABLES #####
 variable "default_vpc_sg_ingress_rules" {
   description = "A schema list of ingress rules for the default vpc's default security group, see https://www.terraform.io/docs/providers/aws/r/security_group.html#ingress"
-  type        = list
+  type        = list(any)
   default     = []
 }
 
 variable "default_vpc_sg_egress_rules" {
   description = "A schema list of egress rules for the default vpc's default security group, see https://www.terraform.io/docs/providers/aws/r/security_group.html#egress"
-  type        = list
+  type        = list(any)
   default     = []
 }
 
@@ -135,13 +135,13 @@ variable "default_vpc_revoke_rules_on_delete" {
 
 variable "vpc_module_sg_ingress_rules" {
   description = "A schema list of ingress rules for the vpc module's default security group, see https://www.terraform.io/docs/providers/aws/r/security_group.html#ingress"
-  type        = list
+  type        = list(any)
   default     = []
 }
 
 variable "vpc_module_sg_egress_rules" {
   description = "A schema list of egress rules for the vpc module's default security group, see https://www.terraform.io/docs/providers/aws/r/security_group.html#egress"
-  type        = list
+  type        = list(any)
   default     = []
 }
 
