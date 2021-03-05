@@ -4,7 +4,7 @@ include {
 }
 
 terraform {
-  source = "../../../roots/aws/baseline"
+  source = "../../..//roots/aws/member"
 
   after_hook "provider" {
     commands = ["init-from-module"]
