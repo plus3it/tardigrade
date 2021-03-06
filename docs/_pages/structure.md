@@ -7,40 +7,55 @@ toc: true
 # File Structure
 ```
 tardigrade/
-├── aws                                    # AWS partition
-│   ├── 609421024627                       # idempotent element to describe the account
-│   │   ├── base                           # baseline configuration
-│   │   │   ├── tenant-local.auto.tfvars   # defined variables valuables specific to the account
-│   │   │   ├── terragrunt.hcl             # terragrunt configuration for the account
-│   │   └── custom                         # custom configuration
-│   │       ├── terragrunt.hcl             # terragrunt configuration for the account
-│   │       └── variables.tf               # variable declaration specific to the customization
-│   ├── tenant.tf                          # partition provider and variable declarations
-│   ├── tenant-global.tfvars.yaml          # partition variable values
-│   └── terragrunt.hcl                     # terragrunt configuration
-└── roots                                  # root module for terraform
-    └── aws
-        └── baseline                       # baseline configuration for an AWS account
+├── configs                                # Container for terragrunt configs
+│   └── aws                                # AWS partition
+│       ├── {management_account_id}        # Idempotent identifier for management account configurations
+│       │   └── management                 # Baseline teragrunt configuration for management account
+│       └── {member_account_id...}         # Idempotent identifier for member account configurations
+│           └── member                     # Baseline terragrunt configuration for management account
+├── roots                                  # Container for terraform root modules
+│   └── aws                                # AWS partition
+│       ├── management                     # Management root module
+│       │   └── policy_templates           # Container for policy templates used by management config
+│       └── member                         # Member root module
+└── templates                              # Container for terragrunt template configs
+    └── aws                                # AWS partition
+        ├── member                         # Terragrunt config template for member accounts
+        └── management                     # Terragrunt config template for management accounts
 ```
 
 ## Partition
-In this example, the partition is aws (i.e., `tardigrade/aws`). Generally speaking, most AWS implementations of tardigrade  will only use the `aws` partition. The `aws` partition is the commercial partition that most people are used to. There are other partitions though, such as AWS GovCloud (`aws-us-gov`) and AWS China (`aws-cn`)
+In this example, the partition is aws (i.e., `tardigrade/configs/aws`). Generally
+speaking, most AWS implementations of tardigrade will only use the `aws` partition.
+The `aws` partition is the commercial partition that most people are familiar with.
+There are other partitions though, such as AWS GovCloud (`aws-us-gov`) and AWS China
+(`aws-cn`)
 
 ### Idempotent Element
-Each directory at this level (e.g., `tardigrade/aws/<accounts>`) represents an individual account. For AWS, the account number is an idempotent value so we used that to represent individual accounts. The names of these directories do not influence the operation of this framework in any way. They simply serve as a mechanism for developers to easily identify the account.
+Each directory at this level (e.g., `tardigrade/configs/aws/{accounts...}`) represents
+an individual account. For AWS, the account number is an idempotent value so we
+used that to represent individual accounts. The names of these directories do not
+influence the operation of this framework in any way. They simply serve as a mechanism
+for developers to easily identify the account.
 
-Each directory at this level represents an individual account. Account level configurations are stored here and are applied within the context of the target account. Specific elements of the account level configuration are described below.
+Each directory at this level represents an individual account. Account level configurations
+are stored here and are applied within the context of the target account. Specific
+elements of the account level configuration are described below.
 
-#### Base
-This directory has the following files
+#### Baseline
+This directory has the following files:
+
 ```
 base
-├── tenant-local.auto.tfvars # defines tenant specific variables
+├── terraform.tfvars         # defines config-specific variables
 └── terragrunt.hcl           # terragrunt configuration
 ```
 
-#### Custom
-This directory is meant to allow you to add in custom elements that a tenant would like included in their account but are outside of the general baseline created for each account.
+## roots/aws/<baseline>
+This directory contains the terraform modules that tie together the various terraform
+components to comprise an infrastructure baseline to be deployed to every account
+of a given type.
 
-## roots/aws/baseline
-This directory contains the terraform code that ties together the various terraform modules to constitute an infrastructure baseline to be deployed to every account.
+## templates/aws/<template>
+This directory contains template terragrunt configs that can be copied into the
+`configs/aws/{account}` directory to quickly instantiate a new account.

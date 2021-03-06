@@ -10,13 +10,15 @@ toc: true
 * [terragrunt >= v0.21](https://github.com/gruntwork-io/terragrunt)
 
 # How To Use
-You can use the following instructions to see the baseline infrastructure deployed to your account
-```
-terragrunt plan --terragrunt-working-dir tardigrade/aws/609421024627/base --terragrunt-source-update
-```
+You can use the following command to see the baseline infrastructure deployed to
+your account:
 
-Note: Even though the account is noted as `609421024627`, terraform will deploy to the account it's configured for
-{: .notice--info}
+```
+terragrunt plan --terragrunt-working-dir tardigrade/configs/aws/{account_id}/member
+```
 
 # Modify the Baseline
-Currently, there is a simple implementation located in `tardigrade/roots/aws/baseline` that stitches together several of Plus3 IT's terraform modules. This baseline is what's deployed to the account. You can edit the baseline to add/remove modules as you see fit.
+Currently, there is a simple implementation located in `tardigrade/roots/aws/member`
+that stitches together several of Plus3 IT's terraform modules. This baseline is
+what will be deployed to the account. You can edit the baseline to add/remove modules
+as you see fit.

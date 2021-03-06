@@ -5,9 +5,6 @@
 *.tfstate
 *.tfstate.*
 
-# .tfvars files
-*.tfvars
-
 # Local .terragrunt-cache directories
 .terragrunt-cache/
 
@@ -26,6 +23,3 @@ Gemfile.lock
 # tardigrade-ci
 .tardigrade-ci
 tardigrade-ci/
-
-# Add local variables file
-!tenant-local.auto.tfvars
