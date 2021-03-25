@@ -6,17 +6,12 @@ updates:
     interval: daily
   open-pull-requests-limit: 10
 - package-ecosystem: terraform
-  directory: "/tardigrade/roots/aws/baseline"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-- package-ecosystem: gomod
-  directory: "/tests"
+  directory: "/tardigrade/roots/aws/member"
   schedule:
     interval: daily
   open-pull-requests-limit: 10
 - package-ecosystem: terraform
-  directory: "/"
+  directory: "/tardigrade/roots/aws/management"
   schedule:
     interval: daily
   open-pull-requests-limit: 10
