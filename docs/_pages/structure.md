@@ -12,7 +12,7 @@ tardigrade/
 │       ├── {management_account_id}        # Idempotent identifier for management account configurations
 │       │   └── management                 # Baseline teragrunt configuration for management account
 │       └── {member_account_id...}         # Idempotent identifier for member account configurations
-│           └── member                     # Baseline terragrunt configuration for management account
+│           └── member                     # Baseline terragrunt configuration for member account
 ├── roots                                  # Container for terraform root modules
 │   └── aws                                # AWS partition
 │       ├── management                     # Management root module
