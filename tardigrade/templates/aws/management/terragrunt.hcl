@@ -4,7 +4,7 @@ include {
 }
 
 terraform {
-  source = "../../..//roots/aws/management"
+  source = "../../../..//roots/aws/management"
 }
 
 generate "provider" {
