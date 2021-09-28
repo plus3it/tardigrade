@@ -7,8 +7,8 @@ terraform {
   source = "../../../..//roots/aws/management"
 }
 
-generate "provider" {
-  path      = "provider.tf"
+generate "providers" {
+  path      = "providers.tf"
   if_exists = "overwrite"
-  contents  = file(find_in_parent_folders("provider.management.tf"))
+  contents  = file(find_in_parent_folders("providers.management.tf"))
 }
