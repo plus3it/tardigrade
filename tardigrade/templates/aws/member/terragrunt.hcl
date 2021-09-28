@@ -7,10 +7,10 @@ terraform {
   source = "../../..//roots/aws/member"
 }
 
-generate "provider" {
-  path      = "provider.tf"
+generate "providers" {
+  path      = "providers.tf"
   if_exists = "overwrite"
-  contents  = file(find_in_parent_folders("provider.member.tf"))
+  contents  = file(find_in_parent_folders("providers.member.tf"))
 }
 
 dependency "management" {
