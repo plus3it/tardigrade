@@ -9,11 +9,14 @@ toc: true
   - credentials configured for an AWS account
   - note, some modules are pinned to 0.14 It is advised to use this version for now for best compatability. 
 * [terragrunt >= v0.21](https://github.com/gruntwork-io/terragrunt)
-* [AWS CLI >= 2.0](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
-  - used for logging in to AWS
+* (optional!) [AWS CLI >= 2.0](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+  - used for logging in to AWS during the quickstart example
 
-# How To Use
-Validate that you have all tools installed correctly. You can do this by typing `{tool} --version` into the comand line to validate the tool is in your PATH and the version is appropriate. Note that in some installation methods of terragrunt (namely, Brew) will attempt to install the latest version of Terraform with it. This can cause a dependency issue. You may have to manually uninstall undesired versions and add the correct ones to your PATH. 
+# Authentication
+Users have multiple options for authentication to deploy their resources, basically whatever the Terraform providers support at the time! Generally, this falls into one of the following: Login through a CLI tool (which sets $ENV variables that Terraform providers will then use), or setting the account directly with vars in the provider (see the provider documentation for more deails).
+
+# How To Use (quickstart)
+Note: this quickstart covers a very simple setup using AWS and the included templates. Once you have a feel for how the tool works and is deployed, you can further extend functionality however you'd like. Validate that you have all tools installed correctly. You can do this by typing `{tool} --version` into the comand line to validate the tool is in your PATH and the version is appropriate. Note that in some installation methods of terragrunt (namely, Brew) will attempt to install the latest version of Terraform with it. This can cause a dependency issue. You may have to manually uninstall undesired versions and add the correct ones to your PATH. 
 
 After all tools are validated, you must log into the AWS CLI to set your environment config. This generally involves creating programmatic access for a user account and setting it up with `aws configure`. [Instructions for configuring your CLI environment to the desired AWS account can be found here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html).
 
