@@ -30,7 +30,7 @@ Edit `../{account id}/management/terraform.tfvars` with the `account_name` you'd
 
 Edit `../configs/aws/globals.tfvars.yaml` with the namespace you would like to set. This is a unique identifier used in the deployment
 
-Run `terragrunt init --terragrunt-working-dir tardigrade/configs/aws/{account_id}/management` to initialize the backend. This will prompt to create a new bucket (using the name you provided) as the backend if needed. 
+Run `terragrunt init --terragrunt-working-dir tardigrade/configs/aws/{account_id}/management` to initialize the backend. This will prompt to create a new bucket (using the `<project-name>`) as the backend if needed. 
 
 After successful init, run `terragrunt plan --terragrunt-working-dir tardigrade/configs/aws/{account_id}/management` and validate the output. You may run `apply` in a similar fashion to complete the deployment. 
 
