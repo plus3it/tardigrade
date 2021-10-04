@@ -22,13 +22,13 @@ Note: this quickstart covers a very simple setup using AWS and the included temp
 
 After all tools are validated, you must use the AWS CLI to set your environment config for authentication. This generally involves creating programmatic access for a user account and setting it up with `aws configure`. [Instructions for configuring your CLI environment to the desired AWS account can be found here](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html). Note, this is only a quickstart example to get the ball rolling -  mature environments may choose to use an SSO service for authentication to avoid tying IAM Users (and programmatic access keys) to individuals. 
 
+If you have not already, `git clone https://github.com/plus3it/tardigrade.git <project-name>`. It's important to make the `<project-name>` something somewhat unique, as this namespace is used to build the name of the backend tfstate S3 bucket. (You _can_ choose to edit the name of the bucket directly if you want, found in the `../configs/aws/terragrunt.hcl` => `remote_state` block.)
+
 Next, you need to add a configuration into the environment you would like to deploy resources into. In the current state, we only support AWS and are currently working on Azure support. The repository has a `tardigrade/templates/aws` folder where there are two templates for a Management and Member account. The `terragrunt.hcl` file of the Member account is currently written to be dependent on the Management account being done first. This dependency within the file would need to be edited with the Management folder name later, if you wanted to add a member underneath a management account. For the sake of demonstration, we will only be deploying a Management config at this time. Copy the `terraform.tfvars` and `terragrunt.hcl` files from the Management template, into `/tardigrade/configs/aws/{your aws account id}/management/`. 
 
 Edit `../{account id}/management/terraform.tfvars` with the `account_name` you'd like to set. This is a unique identifier used in the deployment
 
 Edit `../configs/aws/globals.tfvars.yaml` with the namespace you would like to set. This is a unique identifier used in the deployment
-
-Edit `../configs/aws/terragrunt.hcl`, find the `remote_state` block. Change the `bucket` and `dynamo_db` name to something unique, like by adding a unique suffix to the string.  (TODO, this is likely an unintended change or dependency, this will likely be patched later so that you do not have to edit this file)
 
 Run `terragrunt init --terragrunt-working-dir tardigrade/configs/aws/{account_id}/management` to initialize the backend. This will prompt to create a new bucket (using the name you provided) as the backend if needed. 
 
