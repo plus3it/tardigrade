@@ -6,11 +6,13 @@ toc: true
 
 # Prerequisites
 * [terraform >= 0.12](https://www.terraform.io/)
-  - credentials configured for an AWS account
-  - note, some modules are pinned to 0.14 It is advised to use this version for now for best compatability. 
+  - Note, the current `configs/versions.tf` is pinned to 0.14, but this can be updated by users themselves if they have code ready for a newer version. 
+  - For root modules, we always recommend a strict pin on the terraform-core version. This pin is to prevent inadvertent upgrades of tfstate by different people working the same project. The pin is in the file configs/versions.tf. To use another version, just update the version in the file. All modules used ought to be compatible from 0.13 and later (when support for module-level for_each was added). It is expected that everything is compatible to 1.x.
 * [terragrunt >= v0.21](https://github.com/gruntwork-io/terragrunt)
-* (optional!) [AWS CLI >= 2.0](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
+* (optional!) [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/install-cliv2.html)
   - used for logging in to AWS during the quickstart example
+  - Credentials configured for an AWS account
+
 
 # Authentication
 Users have multiple options for authentication to deploy their resources, basically whatever the Terraform providers support at the time! Generally, this falls into one of the following: Login through a CLI tool (which sets $ENV variables that Terraform providers will then use), or setting the account directly with vars in the provider (see the provider documentation for more deails).
