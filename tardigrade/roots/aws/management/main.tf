@@ -27,7 +27,7 @@ module "config" {
 }
 
 module "default_ebs_encryption" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-ebs-encryption.git?ref=1.0.1"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-ebs-encryption.git?ref=2.0.0"
 }
 
 module "iam_account" {
