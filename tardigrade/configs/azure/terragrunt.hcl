@@ -50,12 +50,6 @@ generate "versions" {
   contents  = file("${get_parent_terragrunt_dir()}/../versions.tf")
 }
 
-generate "provider" {
-  path      = "provider.tf"
-  if_exists = "overwrite"
-  contents  = file(find_in_parent_folders("providers.member.tf"))
-}
-
 terraform {
   before_hook "terraform_lock" {
     commands = ["init"]

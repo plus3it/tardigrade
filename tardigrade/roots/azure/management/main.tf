@@ -1,5 +1,5 @@
 module "resource_group" {
-  source = "../../../templates/azure/modules/resource_group"
+  source = "../../../templates/modules/terraform_azurerm_resource_group"
   for_each = { for resource_group in local.resource_groups : resource_group.label => resource_group }
   location = each.value.location
   resource_group = each.value.name
@@ -7,7 +7,7 @@ module "resource_group" {
 }
 
 module "storage_account" {
-  source = "../../../templates/azure/modules/storage_account"
+  source = "../../../templates/modules/terraform_azurerm_storage_account"
   for_each = { for storage_account in local.storage_accounts : storage_account.label => storage_account }
 
   storage_account = substr(replace(each.value.name, "-", ""),0,24)

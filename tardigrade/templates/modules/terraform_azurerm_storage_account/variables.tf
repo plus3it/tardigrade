@@ -1,6 +1,6 @@
 variable "storage_account" {
     description = "the name of the storage account to be created"
-    type = string(12)
+    type = string
 }
 variable "resource_group" {
     description = "the name of the RG to deploy the SA into"
