@@ -1,6 +1,6 @@
 # tardigrade
 
-An example implementation of creating an account baseline using terragrunt and terraform
+A new example implementation of creating an account baseline using terragrunt and terraform
 
 ## User Documentation
 User documentation can be found at: [https://plus3it.github.io/tardigrade](https://plus3it.github.io/tardigrade)
