@@ -25,7 +25,7 @@ module "iam_account" {
 }
 
 module "guardduty" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-guardduty.git?ref=2.0.1"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-guardduty.git?ref=3.0.0"
 
   providers = {
     aws        = aws
