@@ -37,7 +37,7 @@ module "guardduty" {
 }
 
 module "securityhub" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-security-hub.git//modules/cross-account-member?ref=3.0.0"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-security-hub.git//modules/cross-account-member?ref=3.0.1"
 
   providers = {
     aws               = aws
