@@ -12,7 +12,7 @@ module "buckets" {
 }
 
 module "cloudtrail" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-cloudtrail.git?ref=6.0.0"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-cloudtrail.git?ref=6.2.0"
 
   cloudtrail_name   = "${local.namespace}-cloudtrail"
   cloudtrail_bucket = module.buckets["cloudtrail"].bucket.id
