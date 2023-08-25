@@ -18,7 +18,7 @@ minimal_mistakes_skin: "air"  # "default", "air", "aqua", "contrast", "dark", "d
 locale: "en-US"
 title: "Tardigrade"
 title_separator: "-"
-subtitle: # site tagline that appears below site title in masthead
+subtitle:  # site tagline that appears below site title in masthead
 name: "Plus3IT"
 description: "Tardigrade Framework"
 url: "https://plus3it.github.io/tardigrade"
