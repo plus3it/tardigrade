@@ -31,7 +31,7 @@ module "default_ebs_encryption" {
 }
 
 module "iam_account" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-iam-account.git?ref=2.0.0"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-iam-account.git?ref=3.0.0"
 
   account_alias = local.namespace
   tags          = local.tags
