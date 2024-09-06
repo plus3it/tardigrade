@@ -20,7 +20,7 @@ module "cloudtrail" {
 }
 
 module "config" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-config.git?ref=4.0.0"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-config.git?ref=4.1.0"
 
   config_bucket = module.buckets["config"].bucket.id
   tags          = local.tags
