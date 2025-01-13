@@ -46,7 +46,7 @@ module "saml_providers" {
 }
 
 module "securityhub" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-security-hub.git?ref=4.2.1"
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-security-hub.git?ref=5.0.0"
 
   standard_subscription_arns = [
     "arn:${local.partition}:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0",
