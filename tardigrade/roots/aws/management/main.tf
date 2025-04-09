@@ -1,5 +1,5 @@
 module "buckets" {
-  source   = "git::https://github.com/plus3it/terraform-aws-tardigrade-s3-bucket.git?ref=5.0.1"
+  source   = "git::https://github.com/plus3it/terraform-aws-tardigrade-s3-bucket.git?ref=5.1.0"
   for_each = { for bucket in local.buckets : bucket.label => bucket }
 
   bucket = each.value.name
