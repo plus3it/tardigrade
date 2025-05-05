@@ -38,7 +38,7 @@ module "iam_account" {
 }
 
 module "saml_providers" {
-  source   = "git::https://github.com/plus3it/terraform-aws-tardigrade-iam-identity-provider.git?ref=2.0.0"
+  source   = "git::https://github.com/plus3it/terraform-aws-tardigrade-iam-identity-provider.git?ref=3.0.0"
   for_each = { for provider in var.saml_providers : provider.name => provider }
 
   saml_provider_name     = each.value.name
