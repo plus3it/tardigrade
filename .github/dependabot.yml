@@ -1,17 +1,28 @@
 version: 2
 updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+
   - package-ecosystem: docker
-    directory: "/"
+    directory: /
     schedule:
-      interval: daily
-    open-pull-requests-limit: 10
+      interval: weekly
+    groups:
+      docker:
+        patterns:
+          - "*"
+
   - package-ecosystem: terraform
-    directory: "/tardigrade/roots/aws/member"
+    directory: /
     schedule:
-      interval: daily
-    open-pull-requests-limit: 10
-  - package-ecosystem: terraform
-    directory: "/tardigrade/roots/aws/management"
-    schedule:
-      interval: daily
-    open-pull-requests-limit: 10
+      interval: weekly
+    groups:
+      terraform:
+        patterns:
+          - "*"

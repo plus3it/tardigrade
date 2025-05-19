@@ -8,9 +8,6 @@
 # Local .terragrunt-cache directories
 .terragrunt-cache/
 
-# Terragrunt files copied by hooks
-tardigrade/aws/**/tenant.tf
-
 # Jekyll files
 _site/
 .jekyll-cache/
@@ -23,3 +20,6 @@ Gemfile.lock
 # tardigrade-ci
 .tardigrade-ci
 tardigrade-ci/
+
+#macOS local dir meta file
+.DS_Store
