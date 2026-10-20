@@ -43,7 +43,7 @@ For GitLab or other hosts:
   rm .mergify.yml
   ```
   
-  Dependabot and Mergify only work on GitHub. For other hosts, set up CI/CD per the Repository-specific → CI/CD section in `AGENTS.md`.
+  Dependabot and Mergify only work on GitHub. On other hosts, dependency updates use Renovate (a `renovate.json` at the repository root, run from the host's CI). Set up CI/CD per the Repository-specific → CI/CD section in `AGENTS.md`.
 
 4. Push to your new repository:
   ```bash

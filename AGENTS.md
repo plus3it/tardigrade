@@ -1,10 +1,10 @@
-# Agent Instructions for Plus3IT Repositories
+# Agent Instructions for Plus3 IT Repositories
 
-This file provides instructions for AI agents working with Plus3IT repositories. Every repository created from this template inherits these instructions.
+This file provides instructions for AI agents working with Plus3 IT repositories. Every repository created from this template inherits these instructions.
 
 ## Overview
 
-Plus3IT repositories follow a standardized structure using tardigrade-ci tooling for development, testing, and releases. Most repositories are hosted on GitHub and use reusable workflows from plus3it/actions-workflows.
+Plus3 IT repositories follow a standardized structure using tardigrade-ci tooling for development, testing, and releases. Most repositories are hosted on GitHub and use reusable workflows from plus3it/actions-workflows.
 
 ## Before you finish
 
@@ -21,7 +21,7 @@ Before reporting your work as complete:
 
 ## Tooling
 
-All Plus3IT repositories include tardigrade-ci, a Docker-based test framework that provides standardized make targets for development tasks.
+All Plus3 IT repositories include tardigrade-ci, a Docker-based test framework that provides standardized make targets for development tasks.
 
 ### Available Commands
 
@@ -34,7 +34,7 @@ Run `make help` to see all available targets. Common targets include:
 
 ### Docker Image and Makefile
 
-The `Dockerfile` at the repository root pins the tardigrade-ci version with a `FROM plus3it/tardigrade-ci:<version>` line. Dependabot automatically updates this pin. The Makefile bootstrap reads the same pin to clone the matching tardigrade-ci version.
+The `Dockerfile` at the repository root pins the tardigrade-ci version with a `FROM plus3it/tardigrade-ci:<version>` line. The repository's dependency bot (Dependabot or Renovate; see Repository Automation) updates this pin. The Makefile bootstrap reads the same pin to clone the matching tardigrade-ci version.
 
 The repository Makefile includes tardigrade-ci's bootstrap:
 
@@ -60,13 +60,12 @@ When the PR merging the version bump is pushed to the default branch (main or ma
 
 ## Repository Automation
 
-### Mergify
+Dependency updates depend on where the repository is hosted:
 
-The `.mergify.yml` file auto-approves Dependabot pull requests and then merges them (merge method). It has no rules for other pull requests.
+- **GitHub**: Dependabot (`.github/dependabot.yml`) opens update PRs, and Mergify (`.mergify.yml`) auto-approves and merges Dependabot PRs. Mergify has no rules for other PRs.
+- **Other hosts (for example, GitLab)**: Renovate (`renovate.json`) opens update merge requests, run by the host's CI. Dependabot and Mergify do not work there.
 
-### Dependabot
-
-The `.github/dependabot.yml` file configures automatic dependency updates for GitHub Actions and Docker images (weekly, grouped by ecosystem).
+Check which of these files the repository has before changing dependency automation.
 
 ## Formatting
 

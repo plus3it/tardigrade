@@ -68,6 +68,8 @@ rm -rf .github/
 rm .mergify.yml
 ```
 
+Dependabot and Mergify only work on GitHub. On other hosts, dependency updates use Renovate: add a `renovate.json` at the repository root and run Renovate from the host's CI. Record the setup in AGENTS.md under Repository-specific → CI/CD.
+
 ### 4. Push to New Remote
 
 ```bash

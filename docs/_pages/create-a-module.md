@@ -76,13 +76,9 @@ Tests use [mockstack](https://github.com/plus3it/mockstack) to simulate AWS serv
 - Each test scenario lives in `tests/<scenario>/`
 - The scenario contains `main.tf` that uses the module
 - If tests require prerequisite resources (e.g., a VPC), create a `prereq/` subdirectory with Terraform files
-- Run tests with `make test`
+- Run tests the same way CI does: `make mockstack/up`, `make mockstack/pytest`, then `make mockstack/clean` (requires Docker)
 
-For modules that can use moto instead of LocalStack, set `ONLY_MOTO := true` in the Makefile:
-
-```makefile
-ONLY_MOTO := true
-```
+Tests use moto by default. Set `USE_LOCALSTACK` (for example, `USE_LOCALSTACK := true` in the Makefile) only if a test needs LocalStack. `ONLY_MOTO` is obsolete and has no effect; if a Makefile still sets it, it can be removed.
 
 #### Documentation
 
