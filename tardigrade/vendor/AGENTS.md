@@ -11,9 +11,8 @@ Each external module is vendored in its own directory under `vendor/<label>/`, c
 This approach:
 
 - Pins module versions explicitly in per-directory `vendor/<label>/main.tf` files
-- Eliminates runtime calls to Git or HTTP during `terraform init` in units
-- Keeps the repository self-contained for air-gapped environments
-- Enables granular change detection: only units whose roots list `vendor/<label>/**` are affected by updates to that module
+- Avoids fetching the vendored modules themselves at unit init; nested remote modules and providers are still downloaded.
+- Enables granular change detection: only units whose roots list `vendor/<label>/**` are affected by updates to that module. Changes to `vendor/versions.tf` and `vendor/.terraform.lock.hcl` affect all units.
 
 ## Add an External Module
 
@@ -76,13 +75,13 @@ This runs `terraform init` in `vendor/`, downloading modules to `vendor/.terrafo
 
 ### 4. Verify the Module Path
 
-Check `vendor/.terraform/modules/modules.json` to see the exact path where the module was installed:
+Check `tardigrade/vendor/.terraform/modules/modules.json` to see the exact path where the module was installed:
 
 ```bash
-jq '.Modules[] | select(.Key == "<label>.this")' vendor/.terraform/modules/modules.json
+jq '.Modules[] | select(.Key == "<label>.this")' tardigrade/vendor/.terraform/modules/modules.json
 ```
 
-The vendored module is accessible at `vendor/.terraform/modules/<label>.this`. For modules with submodules, the Dir field in modules.json shows the exact path (e.g., `.terraform/modules/<label>.this/modules/<submodule>`).
+The vendored module is accessible at `tardigrade/vendor/.terraform/modules/<label>.this`. For modules with submodules, the Dir field in modules.json shows the exact path (e.g., `.terraform/modules/<label>.this/modules/<submodule>`).
 
 ### 5. Reference from Roots
 
@@ -127,7 +126,7 @@ https://github.com/plus3it/terraform-aws-tardigrade-<name>/blob/<version>/variab
 Or read the local file after vendoring:
 
 ```bash
-cat vendor/.terraform/modules/<label>.this/variables.tf
+cat tardigrade/vendor/.terraform/modules/<label>.this/variables.tf
 ```
 
 ## Private Sources
@@ -195,8 +194,7 @@ If upgrading a major version, review the module's CHANGELOG for breaking changes
 Validate roots that use the upgraded module:
 
 ```bash
-terraform -chdir=tardigrade/roots/<root> init -backend=false
-terraform -chdir=tardigrade/roots/<root> validate
+make terraform/validate-roots
 ```
 
 ## Update Provider Locks
@@ -211,15 +209,15 @@ This locks provider versions for multiple platforms (linux_amd64, darwin_amd64, 
 
 ## Keep Terraform Version Aligned
 
-The `tardigrade/vendor/versions.tf` file pins the minimum Terraform version. Keep this version equal to the version in `.mise.toml` (which pins the exact version used locally and in CI):
+The `tardigrade/vendor/versions.tf` file pins the exact Terraform version used locally and in CI. Keep this version equal to the version in `.mise.toml`:
 
 ```hcl
 terraform {
-  required_version = ">= 1.16"
+  required_version = "<version>" # terraform-version
 }
 ```
 
-When upgrading the Terraform version in `.mise.toml`, update `vendor/versions.tf` to match.
+The `# terraform-version` marker lets the Makefile grep for this version. When upgrading the Terraform version in `.mise.toml`, update `vendor/versions.tf` to match.
 
 ## Vendored Modules vs. Local Modules
 
@@ -232,3 +230,7 @@ Use local modules (`modules/<name>/`) for:
 - Quick prototypes before publishing
 
 See [tardigrade/modules/AGENTS.md](../modules/AGENTS.md) for local module guidance.
+
+## Dependency Updates
+
+On GitHub, Dependabot (configured in `.github/dependabot.yml`) proposes pull requests for pin updates. On other hosts, Renovate (configured in `renovate.json`) proposes updates. Mergify (GitHub only) can auto-merge Dependabot PRs based on rules in `.mergify.yml`.

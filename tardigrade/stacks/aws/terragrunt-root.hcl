@@ -55,10 +55,10 @@ generate "versions" {
 }
 
 locals {
-  stack_dependency_globs  = try(yamldecode(file("${get_original_terragrunt_dir()}/.tardigrade.config.yaml")).dependency_globs, [])
+  unit_dependency_globs   = try(yamldecode(file("${get_original_terragrunt_dir()}/.tardigrade.config.yaml")).dependency_globs, [])
   source_name             = basename(get_original_terragrunt_dir())
   source_dependency_globs = try(yamldecode(file("${get_repo_root()}/tardigrade/roots/${local.source_name}/.tardigrade.config.yaml")).dependency_globs, [])
-  read_dependencies       = [for dependency_glob in distinct(concat(local.source_dependency_globs, local.stack_dependency_globs)) : mark_glob_as_read("${get_repo_root()}/tardigrade/${dependency_glob}")]
+  read_dependencies       = [for dependency_glob in distinct(concat(local.source_dependency_globs, local.unit_dependency_globs)) : mark_glob_as_read("${get_repo_root()}/tardigrade/${dependency_glob}")]
 
   session_name  = can(get_env("AWS_ROLE_SESSION_NAME")) ? get_env("AWS_ROLE_SESSION_NAME") : null
   global_region = "{{global_region}}"
@@ -71,6 +71,21 @@ locals {
 
   # Partition is derived from the parent directory name
   partition = basename(get_parent_terragrunt_dir())
+
+  # Mark shared files as read for change detection
+  read_shared = [for f in [
+    "vendor/versions.tf",
+    "vendor/.terraform.lock.hcl",
+    "stacks/${local.partition}/providers.tf",
+    "stacks/${local.partition}/globals.tfvars.yaml",
+  ] : mark_as_read("${get_repo_root()}/tardigrade/${f}")]
+
+  read_account = mark_as_read(find_in_parent_folders("account.tfvars.yaml"))
+
+  # Try to load root-specific tfvars.yaml
+  root_name      = basename(get_terragrunt_dir())
+  root_vars_path = "${get_parent_terragrunt_dir()}/${local.root_name}.tfvars.yaml"
+  read_root      = fileexists(local.root_vars_path) ? [mark_as_read(local.root_vars_path)] : []
 
   # Backend bucket and lock table names
   backend_bucket     = "{{repo_name}}-tfstate"
@@ -89,9 +104,8 @@ locals {
 
   account_vars = yamldecode(file(find_in_parent_folders("account.tfvars.yaml")))
 
-  # Try to load root-specific tfvars.yaml if it exists (e.g., management.tfvars.yaml)
-  root_name = basename(get_terragrunt_dir())
-  root_vars = fileexists("${get_parent_terragrunt_dir()}/${local.root_name}.tfvars.yaml") ? yamldecode(file("${get_parent_terragrunt_dir()}/${local.root_name}.tfvars.yaml")) : {}
+  # Load root-specific tfvars.yaml if it exists (already defined above for mark_as_read)
+  root_vars = fileexists(local.root_vars_path) ? yamldecode(file(local.root_vars_path)) : {}
 }
 
 inputs = merge(
@@ -99,10 +113,11 @@ inputs = merge(
   local.root_vars,
   local.account_vars,
   {
-    account_id   = local.account_id
-    region       = local.region
-    partition    = local.partition
-    session_name = local.session_name
-    default_tags = local.tags
+    account_id    = local.account_id
+    region        = local.region
+    global_region = local.global_region
+    partition     = local.partition
+    session_name  = local.session_name
+    default_tags  = local.tags
   },
 )

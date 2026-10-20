@@ -17,18 +17,18 @@ tardigrade/
 ├── modules/<name>/                     # Local reusable modules
 ├── roots/<root>/                       # Terraform root modules (not tied to a partition)
 │   ├── .tardigrade.config.yaml         # Dependency globs for change detection
-│   ├── management/                     # Management account root
-│   └── member/                         # Member account root
-├── templates/<type>/                   # Terragrunt unit templates for new accounts
-│   ├── management/
+│   ├── *.tf                            # Root module files
+│   └── ...
+├── templates/                          # Terragrunt unit templates for new stacks
+│   ├── management/                     # <type> (AWS example)
 │   │   ├── account.tfvars.yaml
-│   │   └── global/<root>/              # Units for the global region
+│   │   └── global/management/          # Unit for the global region
 │   │       ├── terragrunt.hcl
 │   │       └── terraform.tfvars
-│   └── member/
+│   └── member/                         # <type> (AWS example)
 │       ├── account.tfvars.yaml
-│       ├── global/<root>/              # Units for the global region
-│       └── regional/<root>/            # Units for non-global regions
+│       ├── global/member/              # Unit for the global region
+│       └── regional/member/            # Unit for each other region
 └── stacks/<partition>/                 # Deployed units (one state file per unit)
     ├── terragrunt-root.hcl             # Root Terragrunt config for all units
     ├── providers.tf                    # Provider configuration template
@@ -77,7 +77,7 @@ The template's `make init/repo` target and template files currently target AWS. 
 - **Module**: A local reusable module in `modules/<name>/`.
 - **External module**: A reusable module from any external source (public or private git repositories, public or private Terraform registries). Plus3 IT public modules use the `plus3it/terraform-aws-tardigrade-*` naming convention and are created from the [repo-template](https://github.com/plus3it/repo-template).
 - **Vendor**: One subdirectory per external module. `vendor/<label>/main.tf` holds a single `module "this"` with the pinned source; `vendor/main.tf` only lists references to these directories. Roots use `vendor/.terraform/modules/<label>.this`.
-- **Dependency globs**: Each root's `.tardigrade.config.yaml` lists globs (`vendor/<label>/**`, `modules/<name>/**`) for its dependencies. Change detection uses these to determine which units need replanning.
+- **Dependency globs**: Each root's `.tardigrade.config.yaml` lists globs (`vendor/<label>/**`, `modules/<name>/**`) for its dependencies. `terragrunt-root.hcl` marks these and shared input files for change detection (`terragrunt find --filter "[<base>...HEAD]"`), which determines which units need replanning. Shared files affecting all units: `vendor/versions.tf`, `vendor/.terraform.lock.hcl`, `stacks/<partition>/providers.tf`, `globals.tfvars.yaml`. Scope-level files (e.g., `account.tfvars.yaml`) affect only that scope's units. Root-specific files (e.g., `<root>.tfvars.yaml`) affect only that root's units.
 - **Partition**: The cloud or partition directory (e.g., `aws`, `aws-us-gov`, `gcp`). In the AWS example: an AWS partition (`aws` for commercial, `aws-us-gov` for GovCloud, `aws-cn` for China).
 
 ## Layer Details
@@ -134,7 +134,9 @@ The `stacks/<partition>/terragrunt-root.hcl` file provides common configuration 
 1. `globals.tfvars.yaml` (partition-level)
 2. `<root>.tfvars.yaml` (root-specific, optional)
 3. Scope-level YAML (e.g., `account.tfvars.yaml` for AWS)
-4. Computed values: scope ID, `region`, `partition`, and other computed variables
+4. Computed values: scope ID, `region`, `partition`, `global_region`, and other computed variables
+5. Unit `terragrunt.hcl` `inputs` block (unit-specific overrides)
+6. Unit `terraform.tfvars` (auto-loaded by Terraform; overrides Terragrunt's TF_VAR_* environment variables)
 
 Units outside the global region should depend on the global-region unit for the same root (defined in the unit's `terragrunt.hcl` `dependency` block).
 

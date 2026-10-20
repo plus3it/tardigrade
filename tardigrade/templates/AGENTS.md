@@ -34,11 +34,15 @@ Add custom types for specialized roles (e.g., `security`, `network`, `logging`).
 
 ## Global vs. Regional
 
-- **Global units** (`global/<root>/`) deploy resources that exist once per scope, typically in the partition's primary region (e.g., `us-east-1` for `aws`, `us-gov-west-1` for `aws-us-gov`). Examples in the AWS baseline: IAM roles, S3 buckets for central logging. In GCP deployments, these may live in a `_global/` directory.
+Roots that deploy both global and regional resources use `count` or conditional `for_each` to gate global-only resources: `count = local.is_global ? 1 : 0`, where `is_global = var.region == var.global_region`. Global-only resources (IAM account alias, CloudTrail multi-region trail, IAM identity providers) are created only when the unit is in the global region. Regional resources (AWS Config, GuardDuty detectors, Security Hub, EBS encryption) are created in every region.
 
-- **Regional units** (`regional/<root>/`) deploy resources that exist in multiple regions. Examples in the AWS baseline: GuardDuty detectors, Config recorders, VPCs.
+- **Global units** (`global/<root>/`) are deployed to the partition's primary region (e.g., `us-east-1` for `aws`, `us-gov-west-1` for `aws-us-gov`). They create both global-only resources and regional resources. In GCP deployments, these may live in a `_global/` directory.
 
-Regional units typically depend on the global unit for the same root to reference outputs like S3 bucket names.
+- **Regional units** (`regional/<root>/`) are deployed to other regions. They create only regional resources because `local.is_global` evaluates to false, skipping global-only modules.
+
+Regional units typically depend on the global unit for the same root for ordering only (using `skip_outputs = true`).
+
+For the AWS example: member stacks depend on the management stack. The management stack must be applied first so member units can reference its outputs (CloudTrail and Config bucket names). The member templates include `mock_outputs` limited to `validate`: with backend credentials, `terragrunt validate` works on a member unit before the management stack is applied. Without credentials, check unit configuration with `terragrunt hcl validate` and roots with `make terraform/validate-roots`; `plan` never uses the mocks.
 
 ## Placeholders
 
@@ -99,7 +103,7 @@ inputs = {
 }
 ```
 
-Global units are typically 6 levels deep (`<partition>/<scope_id>/<region>/<root>`), so the source path has six `..` segments to reach the repository root. Regional units have the same depth.
+Units are typically at `<partition>/<scope_id>/<region>/<root>`, which is five levels below `tardigrade/`, so the source path has five `..` segments to reach `tardigrade/roots/<root>/`.
 
 Dependencies use relative paths. In the AWS example, for a member account's global unit depending on the management account's global unit:
 
@@ -157,7 +161,8 @@ When adding a new root module:
     }
 
     dependency "<root>_global" {
-        config_path = "../../{{global_region}}/<root>"
+        config_path  = "../../{{global_region}}/<root>"
+        skip_outputs = true
     }
     ```
 
@@ -167,10 +172,11 @@ Regional units for the same root typically depend on the global unit. The depend
 
 ```hcl
 dependency "<root>_global" {
-  config_path = "../../{{global_region}}/<root>"
+  config_path  = "../../{{global_region}}/<root>"
+  skip_outputs = true
 }
 ```
 
-This assumes the regional unit is at `<account>/<region>/<root>` and the global unit is at `<account>/<global_region>/<root>`.
+`skip_outputs = true` makes it an ordering dependency only: the global unit is applied first, and its outputs aren't read. This assumes the regional unit is at `<scope_id>/<region>/<root>` and the global unit is at `<scope_id>/<global_region>/<root>`.
 
 After substituting `{{global_region}}` via `make init/repo`, the path becomes concrete (e.g., `../../us-east-1/<root>`).

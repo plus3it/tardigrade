@@ -14,14 +14,15 @@ Before reporting your work as complete:
 2. Run tests as described in the Repository-specific → Testing section
 3. For user-visible changes in repos with `.bumpversion.cfg`:
     - Update `CHANGELOG.md` following [Keep a Changelog](http://keepachangelog.com/) format
-    - Choose the appropriate version bump (`make bumpversion/patch`, `minor`, or `major`)
-    - Include both changes in the same commit
+    - Commit your changes, including the CHANGELOG.md entry
+    - Run the appropriate version bump (`make bumpversion/patch`, `minor`, or `major`), which creates its own commit
+    - Both commits go in the same pull request
 4. Regenerate any maintained documentation (e.g., `make docs/generate` for Terraform module READMEs)
 5. In your final report, list everything a person must still do: pushes, pull requests, applies, account or credential setup, and anything you could not verify
 
 ## Tooling
 
-All Plus3 IT repositories include tardigrade-ci, a Docker-based test framework that provides standardized make targets for development tasks.
+Repositories created from this template include tardigrade-ci, a Docker-based test framework that provides standardized make targets for development tasks.
 
 ### Available Commands
 
@@ -56,7 +57,7 @@ make bumpversion/major   # For breaking changes (1.2.3 → 2.0.0)
 
 This command updates `current_version` in `.bumpversion.cfg` and commits the change (the config has `commit = True` and `tag = False`). Update `CHANGELOG.md` in the same PR following [Keep a Changelog](http://keepachangelog.com/) format.
 
-When the PR merging the version bump is pushed to the default branch (main or master), the release workflow (`.github/workflows/release.yml`) runs automatically. The workflow creates a GitHub Release and tag named after `current_version` ONLY if that version differs from the latest existing tag. Release notes are generated automatically by GitHub, not extracted from CHANGELOG.md.
+On GitHub, when the PR merging the version bump is pushed to the default branch (main or master), the release workflow (`.github/workflows/release.yml`) runs automatically. The workflow creates a GitHub Release and tag named after `current_version` ONLY if that version differs from the latest existing tag. Release notes are generated automatically by GitHub, not extracted from CHANGELOG.md. On other hosts, see Repository-specific → CI/CD for the release process.
 
 ## Repository Automation
 
@@ -93,7 +94,7 @@ tardigrade organizes infrastructure into these layers, bottom to top:
 - **Module**: A local reusable module in `tardigrade/modules/<name>/`
 - **External module**: A reusable module from any external source (public or private git repositories, public or private Terraform registries). Plus3 IT public modules use the `plus3it/terraform-aws-tardigrade-*` naming convention.
 - **Vendor**: One subdirectory per external module. `tardigrade/vendor/<label>/main.tf` holds a single `module "this"` with the pinned source; `tardigrade/vendor/main.tf` only lists `module "<label>" { source = "./<label>" }`. One `terraform init` in `vendor/` fetches everything; roots use `vendor/.terraform/modules/<label>.this`
-- **Dependency globs**: `tardigrade/roots/<root>/.tardigrade.config.yaml` lists `dependency_globs` (`vendor/<label>/**`, `modules/<name>/**`, data files) for what the root uses; a unit may add its own `.tardigrade.config.yaml`. `terragrunt-root.hcl` calls `mark_glob_as_read()` on them, so change detection (`terragrunt find --filter "[<base>...HEAD]"`) selects only units affected by a dependency update
+- **Dependency globs**: `tardigrade/roots/<root>/.tardigrade.config.yaml` lists `dependency_globs` (`vendor/<label>/**`, `modules/<name>/**`, data files) for what the root uses; a unit may add its own `.tardigrade.config.yaml`. `terragrunt-root.hcl` calls `mark_glob_as_read()` and `mark_as_read()` on globs and shared input files, so change detection (`terragrunt find --filter "[<base>...HEAD]"`) selects only units affected by a dependency update. Shared files that affect all units: `vendor/versions.tf`, `vendor/.terraform.lock.hcl`, `stacks/<partition>/providers.tf`, `globals.tfvars.yaml`. Scope-level files (e.g., `account.tfvars.yaml`) affect only units in that scope. Root-specific files (e.g., `<root>.tfvars.yaml`) affect only units of that root.
 - **Template**: Starter files in `tardigrade/templates/<type>/` for creating new stacks
 - **Partition**: The cloud or partition directory (e.g., `aws`, `aws-us-gov`, `gcp`). For the AWS example: AWS partition (e.g., `aws`, `aws-us-gov`, `aws-cn`)
 - **Global region**: The primary region for each partition where global resources are deployed (e.g., `us-east-1` for `aws`, `us-gov-west-1` for `aws-us-gov`)
@@ -109,25 +110,24 @@ make terraform/vendor
 Linting:
 
 ```bash
-make lint              # Runs all linters
-make ec/lint           # Editorconfig check
-make hcl/lint          # HCL syntax
-make terraform/lint    # Terraform files in roots/
-make json/lint         # JSON files
-make yaml/lint         # YAML files
+make lint                     # Runs all linters
+make ec/lint                  # Editorconfig check
+make hcl/lint                 # HCL syntax
+make terraform/lint           # Terraform files in roots/
+make json/lint                # JSON files
+make yaml/lint                # YAML files
 ```
 
 Validate roots:
 
 ```bash
-terraform -chdir=tardigrade/roots/<root> init -backend=false
-terraform -chdir=tardigrade/roots/<root> validate
+make terraform/validate-roots # Validates all roots against vendored modules
 ```
 
 Plan a single unit (requires AWS credentials):
 
 ```bash
-terragrunt plan --working-dir tardigrade/stacks/<partition>/<account_id>/<region>/<root>
+terragrunt plan --working-dir tardigrade/stacks/<partition>/<scope_id>/<region>/<root>
 ```
 
 Never run `apply`, `destroy`, `import`, or `state` commands without explicit human approval.
@@ -140,7 +140,7 @@ Never run `apply`, `destroy`, `import`, or `state` commands without explicit hum
 
 ### Procedure Index
 
-Detailed instructions for common tasks:
+Detailed instructions for common tasks. Before starting one of these tasks, read the linked file.
 
 - [Add a stack or unit](tardigrade/stacks/AGENTS.md)
 - [Add a root](tardigrade/roots/AGENTS.md)
@@ -151,7 +151,7 @@ Detailed instructions for common tasks:
 
 ### Using Another Provider or Deployment Type
 
-The AWS account-baseline example follows these conventions, but tardigrade works with any Terraform provider. For guidance on adapting tardigrade for GCP, Azure, or single-application deployments, see the "Using another provider or deployment type" section in [docs/_pages/structure.md](https://plus3it.github.io/tardigrade/structure/#using-another-provider-or-deployment-type).
+The AWS account-baseline example follows these conventions, but tardigrade works with any Terraform provider. For guidance on adapting tardigrade for GCP, Azure, or single-application deployments, see the "Using another provider or deployment type" section in [Structure](https://plus3it.github.io/tardigrade/structure/#using-another-provider-or-deployment-type).
 
 ### tardigrade-cli
 
@@ -204,6 +204,26 @@ Or:
 - This repository uses Spacelift. Each unit is a separate Spacelift stack with drift detection enabled.
 - Spacelift manages the apply workflow; do not run `terragrunt apply` locally.
 -->
+
+### Testing
+
+Before reporting work complete, run:
+
+```bash
+make terraform/vendor         # Vendor external modules
+make terraform/validate-roots # Validate all root modules
+make lint                     # Run all linters
+```
+
+To find units affected by a change, use Terragrunt's change detection:
+
+```bash
+terragrunt find --filter "[<base>...HEAD]" --working-dir tardigrade/stacks/<partition>
+```
+
+This lists units whose dependencies changed between `<base>` and `HEAD`. For example, use `origin/main...HEAD` to find units affected by commits in the current branch.
+
+List affected units in your final report so a person or CI can plan them.
 
 ## Maintaining the tardigrade template (plus3it/tardigrade only)
 

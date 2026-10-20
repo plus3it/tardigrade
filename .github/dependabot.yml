@@ -19,7 +19,9 @@ updates:
           - "*"
 
   - package-ecosystem: terraform
-    directory: /
+    directories:
+      - /tardigrade/vendor
+      - /tardigrade/vendor/*
     schedule:
       interval: weekly
     groups:

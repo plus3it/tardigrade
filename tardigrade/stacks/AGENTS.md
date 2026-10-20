@@ -54,13 +54,16 @@ For other providers: ensure the scope (project, subscription, etc.) exists befor
 7. Validate the configuration:
 
     ```bash
-    terraform -chdir=tardigrade/roots/<root> validate
+    make terraform/validate-roots
     ```
 
 Regional units typically depend on the global unit for the same root. Ensure dependency paths are correct.
 
+For the AWS example: member stacks depend on the management stack. The management stack must be applied first so member units can reference its outputs (CloudTrail and Config bucket names). The member templates include `mock_outputs` limited to `validate`: with backend credentials, `terragrunt validate` works on a member unit before the management stack is applied. Without credentials, check unit configuration with `terragrunt hcl validate` and roots with `make terraform/validate-roots`; `plan` never uses the mocks.
+
 8. In your final report, list for a person to complete:
     - Create the scope or confirm it exists (if not already confirmed). For AWS: create the account or confirm it exists.
+    - For member stacks in the AWS example: apply the management stack first if not already applied
     - Run `terragrunt plan --working-dir <unit-path>` for each new unit (list the unit paths)
 
 ## Add a Unit (New Region or Root)
@@ -104,19 +107,22 @@ dependency_globs:
 
 ## Inputs Precedence
 
-Terragrunt merges YAML configuration files in this order (later values override earlier ones):
+Terragrunt and Terraform merge configuration inputs in this order (later values override earlier ones):
 
-1. `tardigrade/stacks/<partition>/globals.tfvars.yaml` — partition-wide settings
-2. `tardigrade/stacks/<partition>/<root>.tfvars.yaml` — root-specific settings for the partition (if exists)
-3. `tardigrade/stacks/<partition>/<scope_id>/account.tfvars.yaml` (or equivalent scope-level YAML) — scope-specific settings
+1. `tardigrade/stacks/<partition>/globals.tfvars.yaml` — partition-wide settings (loaded by Terragrunt)
+2. `tardigrade/stacks/<partition>/<root>.tfvars.yaml` — root-specific settings for the partition (if exists, loaded by Terragrunt)
+3. `tardigrade/stacks/<partition>/<scope_id>/account.tfvars.yaml` (or equivalent scope-level YAML) — scope-specific settings (loaded by Terragrunt)
 4. Computed inputs — extracted from the unit path and added by `terragrunt-root.hcl`. For the AWS example:
     - `account_id`: from the directory path
     - `region`: from the directory path
     - `partition`: from the parent directory name
+    - `global_region`: from `terragrunt-root.hcl` local
     - `session_name`: from `AWS_ROLE_SESSION_NAME` environment variable
     - `default_tags`: generated tags including state paths
+5. Unit-level `inputs` block in the unit's `terragrunt.hcl` — unit-specific overrides
+6. `terraform.tfvars` in the unit directory — auto-loaded by Terraform. This overrides Terragrunt's inputs because Terraform loads `terraform.tfvars` after processing the TF_VAR_* environment variables that Terragrunt sets.
 
-Verify the merge logic in `tardigrade/stacks/<partition>/terragrunt-root.hcl`.
+Verify the merge logic in `tardigrade/stacks/<partition>/terragrunt-root.hcl`. Use Terragrunt's `inputs` block (step 5) for most unit-specific values. Use `terraform.tfvars` (step 6) sparingly, only when you need values to override Terragrunt's inputs.
 
 ## Generated Files
 
