@@ -73,7 +73,7 @@ All repositories follow `.editorconfig` rules. Validate formatting with `make ec
 
 ## What is tardigrade
 
-tardigrade is an account baseline framework that uses Terragrunt and Terraform to deploy and manage AWS account configurations. It provides a standardized structure for managing multiple AWS accounts across different partitions (commercial AWS, GovCloud, etc.).
+tardigrade is a repository structure and set of conventions for Terragrunt + Terraform deployments with any Terraform provider. It's used for whole-account baselines (most often AWS) and for single-application deployments (for example, on GCP). The template ships an AWS account-baseline example (management and member roots).
 
 ### Architecture Layers
 
@@ -82,19 +82,19 @@ tardigrade organizes infrastructure into these layers, bottom to top:
 1. **Vendor**: External Terraform modules pinned and vendored locally (`tardigrade/vendor/`)
 2. **Modules**: Local reusable Terraform modules (`tardigrade/modules/<name>/`)
 3. **Roots**: Terraform root modules that compose modules into deployable configurations (`tardigrade/roots/<root>/`)
-4. **Stacks and Units**: Account-specific Terragrunt configurations (`tardigrade/stacks/<partition>/<account_id>/<region>/<root>/`)
-5. **Templates**: Starter configurations for onboarding new accounts (`tardigrade/templates/<type>/`)
+4. **Stacks and Units**: Scope-specific Terragrunt configurations (`tardigrade/stacks/<partition>/<scope_id>/<region>/<root>/`). In the AWS example, the scope is an account.
+5. **Templates**: Starter configurations for onboarding new stacks (`tardigrade/templates/<type>/`)
 
 ### Glossary
 
-- **Unit**: A directory with `terragrunt.hcl`; one unit has one state file. Path: `tardigrade/stacks/<partition>/<account_id>/<region>/<root>/`
-- **Stack**: An account directory and all its units, `tardigrade/stacks/<partition>/<account_id>/`. "Add a stack" means onboarding an account. "Add a unit" means a new region or root in an existing account. Note: this is NOT a `terragrunt.stack.hcl` file or a Spacelift stack.
+- **Unit**: A directory with `terragrunt.hcl`; one unit has one state file. Path: `tardigrade/stacks/<partition>/<scope_id>/<region>/<root>/`
+- **Stack**: A scope directory and all its units, `tardigrade/stacks/<partition>/<scope_id>/`. The scope is whatever the provider deploys into: an AWS account, a GCP project, an Azure subscription, and so on. "Add a stack" means onboarding a new scope (for AWS, an account). "Add a unit" means a new region or root in an existing stack. Note: this is NOT a `terragrunt.stack.hcl` file or a Spacelift stack. A deployment may also use terragrunt.stack.hcl files; when it does, say "Terragrunt stack file" for those.
 - **Root**: A Terraform root module in `tardigrade/roots/<root>/`, deployed by units.
 - **Module**: A local reusable module in `tardigrade/modules/<name>/`
 - **Public module**: A `plus3it/terraform-aws-tardigrade-*` repository
 - **Vendor**: The `tardigrade/vendor/main.tf` file that pins external modules; after running `make terraform/vendor`, modules are available at `tardigrade/vendor/.terraform/modules/<label>`
 - **Template**: Starter files in `tardigrade/templates/<type>/` for creating new stacks
-- **Partition**: AWS partition (e.g., `aws`, `aws-us-gov`, `aws-cn`)
+- **Partition**: The cloud or partition directory (e.g., `aws`, `aws-us-gov`, `gcp`). For the AWS example: AWS partition (e.g., `aws`, `aws-us-gov`, `aws-cn`)
 - **Global region**: The primary region for each partition where global resources are deployed (e.g., `us-east-1` for `aws`, `us-gov-west-1` for `aws-us-gov`)
 
 ### Verify and Build Commands
@@ -147,6 +147,10 @@ Detailed instructions for common tasks:
 - [Add or upgrade a vendor module](tardigrade/vendor/AGENTS.md)
 - [Template conventions](tardigrade/templates/AGENTS.md)
 - [Create a new deployment repository](NEW_REPO.md)
+
+### Using Another Provider or Deployment Type
+
+The AWS account-baseline example follows these conventions, but tardigrade works with any Terraform provider. For guidance on adapting tardigrade for GCP, Azure, or single-application deployments, see the "Using another provider or deployment type" section in [docs/_pages/structure.md](https://plus3it.github.io/tardigrade/structure/#using-another-provider-or-deployment-type).
 
 ### tardigrade-cli
 
