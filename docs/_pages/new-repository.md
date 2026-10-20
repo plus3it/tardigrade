@@ -19,6 +19,8 @@ If your deployment will be hosted on GitHub, use the tardigrade repository as a 
 3. Choose your organization and repository name
 4. Clone your new repository
 
+The template's default branch is `master`.
+
 ## GitLab or Other Hosts
 
 For GitLab or other hosts:
@@ -35,7 +37,15 @@ For GitLab or other hosts:
   git remote add origin <your-repo-url>
   ```
 
-3. Push to your new repository:
+3. Remove GitHub-specific files (for non-GitHub hosts):
+  ```bash
+  rm -rf .github/
+  rm .mergify.yml
+  ```
+  
+  Dependabot and Mergify only work on GitHub. For other hosts, set up CI/CD per the Repository-specific → CI/CD section in `AGENTS.md`.
+
+4. Push to your new repository:
   ```bash
   git push -u origin master
   ```
@@ -89,6 +99,10 @@ Before running `terragrunt init` in any unit, ensure the backend infrastructure 
     - Assume the role from your deployment accounts
 
 Terragrunt does not create these implicitly. Either create them yourself, or have a person with management-account credentials run `terragrunt backend bootstrap --working-dir <unit>`, which creates the bucket and lock table from the `remote_state` block in `terragrunt-root.hcl`. See [NEW_REPO.md](https://github.com/plus3it/tardigrade/blob/master/NEW_REPO.md).
+
+# Versioning and Release Automation
+
+Deployments are typically not released or versioned. The NEW_REPO.md procedure removes `.bumpversion.cfg` and `.github/workflows/release.yml` by default. If the team wants to version the deployment, keep those files, set an initial version in `.bumpversion.cfg`, and update `CHANGELOG.md` following [Keep a Changelog](http://keepachangelog.com/) format.
 
 # Choosing a Global Region
 

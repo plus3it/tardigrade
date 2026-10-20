@@ -8,7 +8,7 @@ A stack is an AWS account managed by tardigrade. Adding a stack means onboarding
 
 ### Prerequisites
 
-The AWS account must already exist. If it doesn't, prepare the `aws organizations create-account` command for a person to run. Never run organization management commands yourself.
+The AWS account must already exist. If it's not known whether the account exists, ask before proceeding. If it doesn't exist, prepare the `aws organizations create-account` command for a person to run. Never run organization management commands yourself.
 
 ### Steps
 
@@ -52,6 +52,10 @@ The AWS account must already exist. If it doesn't, prepare the `aws organization
     ```
 
 Regional units typically depend on the global unit for the same root. Ensure dependency paths are correct.
+
+8. In your final report, list for a person to complete:
+    - Create the account or confirm it exists (if not already confirmed)
+    - Run `terragrunt plan --working-dir <unit-path>` for each new unit (list the unit paths)
 
 ## Add a Unit (New Region or Root)
 

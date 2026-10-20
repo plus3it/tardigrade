@@ -27,3 +27,6 @@ tardigrade-ci/
 
 #macOS local dir meta file
 .DS_Store
+
+# Temporary provider file written by make terraform/validate-roots
+tardigrade/roots/*/_providers.tf

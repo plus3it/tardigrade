@@ -15,7 +15,7 @@ This document describes how to create a new tardigrade deployment repository fro
 Click the green "Use this template" button on the plus3it/tardigrade repository page, or visit:
 https://github.com/plus3it/tardigrade/generate
 
-Select the repository owner, give it a name (e.g., `acme-tardigrade`), enter a description, select Public or Private, and click "Create repository from template".
+Select the repository owner, give it a name (e.g., `acme-tardigrade`), enter a description, select Public or Private, and click "Create repository from template". The template repository's default branch is `master`.
 
 ### 2. Clone and Create a Branch
 
@@ -59,10 +59,19 @@ git remote set-url origin <your-new-repo-url>
 git checkout -b initial-setup
 ```
 
-### 3. Push to New Remote
+### 3. Remove GitHub-specific Files
+
+For hosts other than GitHub, remove files that only work on GitHub:
 
 ```bash
-git push -u origin main
+rm -rf .github/
+rm .mergify.yml
+```
+
+### 4. Push to New Remote
+
+```bash
+git push -u origin master
 git push -u origin initial-setup
 ```
 
@@ -126,21 +135,39 @@ rm -rf docs/
 
 Edit `AGENTS.md` and delete the entire "Maintaining the tardigrade template (plus3it/tardigrade only)" section (from the heading to the end of the file).
 
-### 3. Reset Changelog and Version
+### 3. Reset Changelog and Release Automation
 
-Copy the template changelog and reset the version:
+Deployments are typically not released. Remove versioning and release automation files:
 
 ```bash
-cp CHANGELOG.template.md CHANGELOG.md
+rm .bumpversion.cfg .github/workflows/release.yml
 ```
 
-Edit `CHANGELOG.md` and replace placeholder items with your repository information.
+Replace `CHANGELOG.md` with a fresh file containing a single initial entry:
 
-Edit `.bumpversion.cfg` and set the initial version (typically `0.0.0` or `0.1.0`).
+```bash
+cat > CHANGELOG.md <<'EOF'
+# Changelog
 
-See the [repo-template README](https://github.com/plus3it/repo-template#readme) for detailed guidance on changelog and versioning conventions.
+All notable changes to this project will be documented in this file.
 
-### 4. Edit Repository-specific Sections
+The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
+
+## [Unreleased]
+
+### Added
+
+- Initial tardigrade deployment setup
+EOF
+```
+
+If the team wants to version this deployment, keep `.bumpversion.cfg` and `.github/workflows/release.yml`, set the initial version in `.bumpversion.cfg`, and update `CHANGELOG.md` following [Keep a Changelog](http://keepachangelog.com/) format.
+
+### 4. Configure CI/CD
+
+If using GitLab, Bitbucket, or another host, set up CI/CD per the Repository-specific → CI/CD section in `AGENTS.md`. GitHub Actions workflows in `.github/workflows/` are already configured if you kept those files.
+
+### 5. Edit Repository-specific Sections
 
 Edit `AGENTS.md` and fill in the "Repository-specific" section:
 
@@ -149,7 +176,7 @@ Edit `AGENTS.md` and fill in the "Repository-specific" section:
 - **Credentials**: Describe how to authenticate for local operations (e.g., AWS profile, aws-vault, OIDC)
 - **CI/CD**: Describe how plan/apply run (GitHub Actions, GitLab CI, Spacelift, etc.). If you don't have CI/CD set up yet, state that explicitly.
 
-### 5. Create State Backend Prerequisites
+### 6. Create State Backend Prerequisites
 
 Terraform state requires an S3 bucket and DynamoDB table in the management account. The bucket and table names are derived from `REPO_NAME`:
 
@@ -194,7 +221,7 @@ terragrunt backend bootstrap --working-dir tardigrade/stacks/<partition>/<accoun
 
 This creates the bucket and lock table from the `remote_state` block in `terragrunt-root.hcl`, including its encryption and tags. Agents prepare this command; they do not run it.
 
-### 6. Add the First Stacks
+### 7. Add the First Stacks
 
 Follow the instructions in [tardigrade/stacks/AGENTS.md](tardigrade/stacks/AGENTS.md) to onboard your first AWS accounts.
 
@@ -210,18 +237,18 @@ cp -r tardigrade/templates/management/global/management \
 
 Edit the YAML and Terragrunt files to replace any remaining placeholders and fill in account-specific values.
 
-### 7. Validate
+### 8. Validate
 
 ```bash
 make terraform/vendor
 make lint
-terraform -chdir=tardigrade/roots/management init -backend=false
-terraform -chdir=tardigrade/roots/management validate
+make terraform/validate-roots
 ```
 
-### 8. Commit and Open a PR
+### 9. Commit and Open a PR
 
 ```bash
+git rm NEW_REPO.md  # This file is only used once, during repository creation
 git add -A
 git status  # Review staged files for anything sensitive
 git commit -m "Initial tardigrade deployment setup"
@@ -229,14 +256,3 @@ git push -u origin initial-setup
 ```
 
 Open a pull request for review.
-
-### 9. Delete This File
-
-After the initial setup PR is merged, delete `NEW_REPO.md`:
-
-```bash
-git rm NEW_REPO.md
-git commit -m "Remove NEW_REPO.md after initial setup"
-```
-
-This file is only used once, during repository creation.

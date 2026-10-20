@@ -21,6 +21,20 @@ terraform/lock: | guard/program/terraform
 	terraform -chdir=$(TF_VENDOR_DIR) providers lock -platform=linux_amd64 -platform=darwin_amd64 -platform=windows_amd64 -platform=linux_arm64
 	@ echo "[$@]: Completed successfully!"
 
+## Validates terraform roots (requires vendored modules)
+terraform/validate-roots: terraform/vendor | guard/program/terraform
+	@ echo "[$@]: Validating terraform roots..."
+	@ set -e; for root_dir in tardigrade/roots/*/; do \
+		root=$$(basename $$root_dir); \
+		echo "[$@]: Validating root: $$root"; \
+		cp tardigrade/stacks/aws/providers.tf $$root_dir/_providers.tf; \
+		terraform -chdir=$$root_dir init -backend=false; \
+		terraform -chdir=$$root_dir validate; \
+		rm -f $$root_dir/_providers.tf $$root_dir/.terraform.lock.hcl; \
+		rm -rf $$root_dir/.terraform; \
+	done
+	@ echo "[$@]: Completed successfully!"
+
 PARTITIONS ?= aws
 
 ## Initializes repository by substituting placeholders and creating partition stacks
