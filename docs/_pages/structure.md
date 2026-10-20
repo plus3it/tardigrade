@@ -31,20 +31,50 @@ tardigrade/
     ├── providers.tf                    # Provider configuration template
     ├── globals.tfvars.yaml             # Partition-level variables
     ├── <root>.tfvars.yaml              # Root-specific variables (optional)
-    └── <account_id>/                   # Account directories (stacks)
-        ├── account.tfvars.yaml         # Account-level variables
+    └── <scope_id>/                     # Scope directories (stacks); in the AWS example: account_id
+        ├── account.tfvars.yaml         # Scope-level variables (account.tfvars.yaml in the AWS example)
         └── <region>/<root>/            # Units: terragrunt.hcl + terraform.tfvars
 ```
 
+## Using Another Provider or Deployment Type
+
+The template ships an AWS account-baseline example, but tardigrade works with any Terraform provider. Here's what changes and what stays the same:
+
+### What Changes
+
+- **Partition directory name**: Reflects the cloud or partition. Examples: `aws`, `aws-us-gov`, `gcp`, `azure`.
+- **Backend and provider configuration**: `stacks/<partition>/terragrunt-root.hcl` and `providers.tf` hold the backend and provider for that cloud. For example, a GCP deployment uses a GCS backend instead of S3.
+- **Scope ID**: The scope directory is named with whatever that provider uses. An AWS account uses a 12-digit account ID; a GCP project uses the project ID string; an Azure subscription uses a subscription ID.
+- **Non-regional units**: Units that aren't regional can live in a `_global/` directory instead of a named region directory.
+- **Terraform root location**: A deployment of a single application may keep its Terraform root inside the unit (a `terraform/` directory) instead of in `roots/` when the root is not reused across scopes.
+
+### What Stays Fixed
+
+The following conventions remain the same regardless of provider:
+
+- One root Terragrunt config per partition directory, included by every unit (the template names it `stacks/<partition>/terragrunt-root.hcl`)
+- Scope ID and region derived from the path via `path_relative_to_include()`
+- State key derived from `path_relative_to_include()` (format: `tfstate/<path>`)
+- External modules are pinned to a version (the template vendors them in `vendor/`)
+- The safety rules (no `apply`/`destroy`/`import`/`state` without human approval)
+
+### AWS-Specific Features
+
+The template's `make init/repo` target and template files currently target AWS. When adapting for another provider:
+
+- Manually edit `stacks/<partition>/terragrunt-root.hcl` and `providers.tf` for the new cloud
+- Replace `account.tfvars.yaml` with whatever scope-level settings the provider needs, and update the root Terragrunt config that loads it (the template loads `account.tfvars.yaml` by name; a GCP deployment might keep its project settings in a `project.hcl` file instead)
+- Update or remove AWS-specific variables like `management_account_id`
+
 ## Glossary
 
-- **Unit**: A directory containing `terragrunt.hcl`. One unit has one state file. Path: `stacks/<partition>/<account_id>/<region>/<root>/`
-- **Stack**: An account directory and all its units: `stacks/<partition>/<account_id>/`. "Add a stack" means onboarding an account.
+- **Unit**: A directory containing `terragrunt.hcl`. One unit has one state file. Path: `stacks/<partition>/<scope_id>/<region>/<root>/`
+- **Stack**: A scope directory and all its units: `stacks/<partition>/<scope_id>/`. The scope is whatever the provider deploys into: an AWS account, a GCP project, an Azure subscription, and so on. "Add a stack" means onboarding a new scope (for AWS, an account). Note: this is NOT a `terragrunt.stack.hcl` file or a Spacelift stack. A deployment may also use terragrunt.stack.hcl files; when it does, say "Terragrunt stack file" for those.
 - **Root**: A Terraform root module in `roots/<root>/`, deployed by units.
 - **Module**: A local reusable module in `modules/<name>/`.
 - **Public module**: A `plus3it/terraform-aws-tardigrade-*` repository created from the [repo-template](https://github.com/plus3it/repo-template).
 - **Vendor**: `vendor/main.tf` pins external modules; they are used as `vendor/.terraform/modules/<label>`.
-- **Partition**: An AWS partition: `aws` (commercial), `aws-us-gov` (GovCloud), or `aws-cn` (China).
+- **Partition**: The cloud or partition directory (e.g., `aws`, `aws-us-gov`, `gcp`). In the AWS example: an AWS partition (`aws` for commercial, `aws-us-gov` for GovCloud, `aws-cn` for China).
 
 ## Layer Details
 
@@ -68,26 +98,26 @@ For procedures on adding roots, see [roots/AGENTS.md](https://github.com/plus3it
 
 ### templates/
 
-Template files for creating new units (account + region combinations). Templates are organized by account type (management, member). The `global/` subdirectory contains units for the global region; `regional/` contains units for other regions.
+Template files for creating new units (scope + region combinations). Templates are organized by type (management, member in the AWS example). The `global/` subdirectory contains units for the global region; `regional/` contains units for other regions.
 
-When creating a new stack, copy the appropriate template directory into `stacks/<partition>/<account_id>/`.
+When creating a new stack, copy the appropriate template directory into `stacks/<partition>/<scope_id>/`.
 
 For template conventions, see [templates/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/templates/AGENTS.md).
 
 ### stacks/
 
-Deployed units organized by partition, account, and region. Each unit directory contains `terragrunt.hcl` and `terraform.tfvars`.
+Deployed units organized by partition, scope, and region. Each unit directory contains `terragrunt.hcl` and `terraform.tfvars`.
 
 #### terragrunt-root.hcl Behavior
 
 The `stacks/<partition>/terragrunt-root.hcl` file provides common configuration for all units in the partition:
 
-**Path parsing**: Extracts `account_id`, `region`, and `root` from the unit path relative to the partition directory (`path_relative_to_include()`). The partition name itself comes from `basename(get_parent_terragrunt_dir())`.
+**Path parsing**: Extracts scope ID (e.g., `account_id` for AWS), `region`, and `root` from the unit path relative to the partition directory (`path_relative_to_include()`). The partition name itself comes from `basename(get_parent_terragrunt_dir())`.
 
-**State key**: Derived from the unit path relative to `stacks/<partition>` using `path_relative_to_include()`. Format: `tfstate/<account_id>/<region>/<root>/terraform.tfstate`
+**State key**: Derived from the unit path relative to `stacks/<partition>` using `path_relative_to_include()`. Format: `tfstate/<scope_id>/<region>/<root>/terraform.tfstate`
 
 **Generated files** (overwritten on every Terragrunt run):
-- `backend.tf` — S3 backend configuration with state bucket and DynamoDB lock table
+- `backend.tf` — Backend configuration (S3 in the AWS example)
 - `providers.tf` — Provider configuration copied from `stacks/<partition>/providers.tf`
 - `versions.tf` — Copied from `vendor/versions.tf`
 - `.terraform.lock.hcl` — Copied from `vendor/.terraform.lock.hcl`
@@ -95,8 +125,8 @@ The `stacks/<partition>/terragrunt-root.hcl` file provides common configuration 
 **Input merge order** (later values override earlier):
 1. `globals.tfvars.yaml` (partition-level)
 2. `<root>.tfvars.yaml` (root-specific, optional)
-3. `account.tfvars.yaml` (account-level)
-4. Computed values: `account_id`, `region`, `partition`, `session_name`, `default_tags`
+3. Scope-level YAML (e.g., `account.tfvars.yaml` for AWS)
+4. Computed values: scope ID, `region`, `partition`, and other computed variables
 
 Units outside the global region should depend on the global-region unit for the same root (defined in the unit's `terragrunt.hcl` `dependency` block).
 

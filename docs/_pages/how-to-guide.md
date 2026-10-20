@@ -41,9 +41,9 @@ This quickstart assumes you're starting with the tardigrade template and want to
 
 # Common Tasks
 
-## Adding a Stack (New Account)
+## Adding a Stack (New Scope)
 
-A stack represents all infrastructure in a single AWS account. To add a new account to your deployment, follow the procedure in [stacks/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/stacks/AGENTS.md) under "Add a stack".
+A stack represents all infrastructure in a single scope (an AWS account, a GCP project, an Azure subscription, etc.). To add a new scope to your deployment, follow the procedure in [stacks/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/stacks/AGENTS.md) under "Add a stack".
 
 ## Adding a Unit (Region/Root)
 

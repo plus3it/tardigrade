@@ -1,8 +1,8 @@
 # Creating a New Deployment Repository
 
-This document describes how to create a new tardigrade deployment repository from the plus3it/tardigrade template.
+This document describes how to create a new tardigrade deployment repository from the plus3it/tardigrade template. The template ships an AWS account-baseline example; adapt it for other providers or deployment types following the guidance in [docs/_pages/structure.md](https://plus3it.github.io/tardigrade/structure/#using-another-provider-or-deployment-type).
 
-## Prerequisites
+## Prerequisites (for the AWS example)
 
 - AWS management account with appropriate permissions
 - S3 bucket and DynamoDB table for Terraform state (see State Backend Prerequisites below)
@@ -77,11 +77,11 @@ git push -u origin master
 git push -u origin initial-setup
 ```
 
-## Customize the Repository
+## Customize the Repository (for the AWS example)
 
 ### 1. Run make init/repo
 
-This substitutes placeholders and creates partition stacks. Provide all required variables:
+This substitutes placeholders and creates partition stacks. Provide all required variables. Note: these variables are specific to the AWS account-baseline example shipped with the template.
 
 ```bash
 make init/repo \

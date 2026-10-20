@@ -6,7 +6,7 @@ toc: true
 
 # Overview
 
-Creating a new tardigrade deployment repository involves setting up the repository structure, configuring placeholders for your environment, and initializing the backend infrastructure.
+Creating a new tardigrade deployment repository involves setting up the repository structure, configuring placeholders for your environment, and initializing the backend infrastructure. The template ships an AWS account-baseline example; adapt it for other providers or deployment types following the guidance in the [Structure]({{ "/structure/#using-another-provider-or-deployment-type" | relative_url }}) guide.
 
 # Choosing a Repository Host
 
@@ -50,15 +50,15 @@ For GitLab or other hosts:
   git push -u origin master
   ```
 
-# Repository Initialization
+# Repository Initialization (for the AWS example)
 
-The `make init/repo` target substitutes placeholders in the tardigrade template and creates partition directories.
+The `make init/repo` target substitutes placeholders in the tardigrade template and creates partition directories. Note: these variables are specific to the AWS account-baseline example shipped with the template.
 
 ## Required Variables
 
 Set these environment variables before running `make init/repo`:
 
-- `REPO_NAME` — Repository name (used for S3 bucket and DynamoDB table names)
+- `REPO_NAME` — Repository name (used for S3 bucket and DynamoDB table names in AWS)
 - `REPO_URL` — Web URL of the repository (any host)
 - `GLOBAL_REGION` — AWS region for global resources (e.g., `us-east-1`)
 - `MANAGEMENT_ACCOUNT_ID` — AWS account ID for the management/organization account
@@ -66,7 +66,7 @@ Set these environment variables before running `make init/repo`:
 
 ## Optional Variables
 
-- `PARTITIONS` — Space-separated list of AWS partitions (default: `aws`). For GovCloud: `PARTITIONS="aws aws-us-gov"`. For China: `PARTITIONS="aws aws-cn"`.
+- `PARTITIONS` — Space-separated list of partitions (default: `aws`). For AWS GovCloud: `PARTITIONS="aws aws-us-gov"`. For China: `PARTITIONS="aws aws-cn"`. For other clouds, use the cloud name (e.g., `gcp`, `azure`).
 
 ## Running Initialization
 
@@ -87,9 +87,9 @@ This command:
 1. Replaces all `{{placeholder}}` values in files under `tardigrade/`
 2. Creates `stacks/<partition>` directories for each partition (copies `stacks/aws` for additional partitions)
 
-# State Backend Prerequisites
+# State Backend Prerequisites (for the AWS example)
 
-Before running `terragrunt init` in any unit, ensure the backend infrastructure exists:
+Before running `terragrunt init` in any unit, ensure the backend infrastructure exists. For the AWS example:
 
 1. **S3 bucket** — Named `<REPO_NAME>-tfstate`, with versioning enabled
 2. **DynamoDB table** — Named `<REPO_NAME>-tfstate-lock`, with `LockID` as the partition key (string type)
@@ -98,15 +98,17 @@ Before running `terragrunt init` in any unit, ensure the backend infrastructure 
     - Read/write to the DynamoDB table
     - Assume the role from your deployment accounts
 
+For GCP or other clouds, replace with the appropriate backend (e.g., GCS bucket for GCP).
+
 Terragrunt does not create these implicitly. Either create them yourself, or have a person with management-account credentials run `terragrunt backend bootstrap --working-dir <unit>`, which creates the bucket and lock table from the `remote_state` block in `terragrunt-root.hcl`. See [NEW_REPO.md](https://github.com/plus3it/tardigrade/blob/master/NEW_REPO.md).
 
 # Versioning and Release Automation
 
 Deployments are typically not released or versioned. The NEW_REPO.md procedure removes `.bumpversion.cfg` and `.github/workflows/release.yml` by default. If the team wants to version the deployment, keep those files, set an initial version in `.bumpversion.cfg`, and update `CHANGELOG.md` following [Keep a Changelog](http://keepachangelog.com/) format.
 
-# Choosing a Global Region
+# Choosing a Global Region (for the AWS example)
 
-The global region hosts resources that are region-independent or must exist in a specific region:
+The global region hosts resources that are region-independent or must exist in a specific region. In the AWS example:
 
 - IAM resources (region-agnostic but must be deployed somewhere)
 - CloudTrail (often deployed to a single region)
@@ -116,6 +118,8 @@ Choose a region based on:
 - Your primary operational region
 - Compliance requirements (GovCloud deployments typically use `us-gov-west-1`)
 - Cost considerations
+
+For deployments on other clouds, the concept of a "global region" may be handled differently (e.g., a `_global/` directory for GCP).
 
 # CI/CD Choices
 

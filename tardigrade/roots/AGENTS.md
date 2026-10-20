@@ -4,9 +4,9 @@ This file describes how to add a new Terraform root module to tardigrade.
 
 ## What is a Root
 
-A root is a Terraform root module in `tardigrade/roots/<root>/` that composes vendored and local modules into a deployable configuration. Roots are partition-agnostic; they work across AWS commercial, GovCloud, and other partitions.
+A root is a Terraform root module in `tardigrade/roots/<root>/` that composes vendored and local modules into a deployable configuration. Roots are partition-agnostic; they work across partitions (e.g., AWS commercial, GovCloud, or GCP).
 
-Units (the Terragrunt configurations in `stacks/<partition>/<account_id>/<region>/<root>/`) deploy roots to specific accounts and regions.
+Units (the Terragrunt configurations in `stacks/<partition>/<scope_id>/<region>/<root>/`) deploy roots to specific scopes and regions.
 
 ## Add a Root
 
@@ -27,7 +27,7 @@ A root typically contains:
 
 ### 3. Define the Variables Contract
 
-Roots receive inputs from Terragrunt's merged YAML configuration and computed values. Common inputs provided by `terragrunt-root.hcl`:
+Roots receive inputs from Terragrunt's merged YAML configuration and computed values. In the AWS example, common inputs provided by `terragrunt-root.hcl`:
 
 - `account_id` (string) — AWS account ID, extracted from the unit path
 - `region` (string) — AWS region, extracted from the unit path
@@ -35,17 +35,19 @@ Roots receive inputs from Terragrunt's merged YAML configuration and computed va
 - `session_name` (string, nullable) — From `AWS_ROLE_SESSION_NAME` environment variable
 - `default_tags` (map of strings) — Generated tags including repository info and state paths
 
+For other providers, the scope ID variable name and computed values will differ based on the implementation in `terragrunt-root.hcl`.
+
 Additionally, roots receive all keys from the merged YAML files:
 - `globals.tfvars.yaml`
 - `<root>.tfvars.yaml` (if exists)
-- `account.tfvars.yaml`
+- Scope-level YAML (e.g., `account.tfvars.yaml` for AWS)
 
-Define variables for any YAML keys the root expects. For example, if `account.tfvars.yaml` contains `account_name` and `email_address`, declare those variables in `variables.tf`.
+Define variables for any YAML keys the root expects. For the AWS example, if `account.tfvars.yaml` contains `account_name` and `email_address`, declare those variables in `variables.tf`.
 
 #### Where to Put Values
 
 - **Deployment-wide values** (set once for the entire deployment): `tardigrade/stacks/<partition>/<root>.tfvars.yaml` (verified: `terragrunt-root.hcl` loads this file)
-- **Per-account values** (different for each account): `tardigrade/stacks/<partition>/<account_id>/account.tfvars.yaml`
+- **Per-scope values** (different for each scope): `tardigrade/stacks/<partition>/<scope_id>/account.tfvars.yaml` (or equivalent scope-level YAML)
 
 ### 4. Reference Modules
 
@@ -81,9 +83,11 @@ module "local_example" {
 
 Do not create a `providers.tf` file in the root. Provider configuration comes from `stacks/<partition>/providers.tf` and is generated into each unit by Terragrunt.
 
-The standard provider configuration includes:
+In the AWS example, the standard provider configuration includes:
 - `aws` (default provider) — Assumes role in the target account
 - `aws.management` (alias) — Assumes role in the management account
+
+For other providers, the configuration will differ (e.g., `google` provider for GCP).
 
 If the root needs additional providers or provider aliases, document them in a comment at the top of `main.tf`.
 
@@ -126,10 +130,10 @@ tardigrade/roots/member/
 
 ## Partition Considerations
 
-Roots must work across partitions (commercial AWS, GovCloud, China). Use the `partition` input to construct ARNs dynamically:
+Roots that work across partitions (e.g., AWS commercial, GovCloud, China) should use the `partition` input to construct ARNs dynamically:
 
 ```hcl
 arn:${var.partition}:service:region:account:resource
 ```
 
-Never hardcode `arn:aws:` in roots.
+For AWS roots, never hardcode `arn:aws:`; use the partition variable instead.

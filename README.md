@@ -1,6 +1,6 @@
 # tardigrade
 
-An example implementation of creating an account baseline using terragrunt and terraform
+A repository structure and conventions for Terragrunt + Terraform deployments that works with any Terraform provider. Used for whole-account baselines (most often AWS) and for single-application deployments (for example, on GCP). This template ships an AWS account-baseline example.
 
 ## User Documentation
 User documentation can be found at: [https://plus3it.github.io/tardigrade](https://plus3it.github.io/tardigrade)

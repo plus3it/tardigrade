@@ -6,13 +6,9 @@ sidebar:
 ---
 
 # Overview
-Tardigrade is a multi-cloud account provisioning and maintenance framework built
-with Terragrunt and Terraform. Currently, this implementation demonstrates the
-ability to manage AWS accounts, but can easily be extended to manage accounts on
-other cloud platforms.
+Tardigrade is a repository structure and conventions for Terragrunt + Terraform deployments that works with any Terraform provider. It's used for whole-account baselines (most often AWS) and for single-application deployments (for example, on GCP).
 
-The framework provides a layered structure for managing infrastructure deployments
-across multiple accounts, regions, and AWS partitions (commercial, GovCloud, China).
+The framework provides a layered structure for managing infrastructure deployments across multiple scopes, regions, and partitions. This template ships an AWS account-baseline example (management and member roots) that demonstrates managing multiple AWS accounts across partitions (commercial, GovCloud, China).
 
 # Prerequisites
 
