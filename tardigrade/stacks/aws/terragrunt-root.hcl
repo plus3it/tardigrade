@@ -55,6 +55,11 @@ generate "versions" {
 }
 
 locals {
+  stack_dependency_globs  = try(yamldecode(file("${get_original_terragrunt_dir()}/.tardigrade.config.yaml")).dependency_globs, [])
+  source_name             = basename(get_original_terragrunt_dir())
+  source_dependency_globs = try(yamldecode(file("${get_repo_root()}/tardigrade/roots/${local.source_name}/.tardigrade.config.yaml")).dependency_globs, [])
+  read_dependencies       = [for dependency_glob in distinct(concat(local.source_dependency_globs, local.stack_dependency_globs)) : mark_glob_as_read("${get_repo_root()}/tardigrade/${dependency_glob}")]
+
   session_name  = can(get_env("AWS_ROLE_SESSION_NAME")) ? get_env("AWS_ROLE_SESSION_NAME") : null
   global_region = "{{global_region}}"
 

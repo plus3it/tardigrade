@@ -92,7 +92,8 @@ tardigrade organizes infrastructure into these layers, bottom to top:
 - **Root**: A Terraform root module in `tardigrade/roots/<root>/`, deployed by units.
 - **Module**: A local reusable module in `tardigrade/modules/<name>/`
 - **External module**: A reusable module from any external source (public or private git repositories, public or private Terraform registries). Plus3 IT public modules use the `plus3it/terraform-aws-tardigrade-*` naming convention.
-- **Vendor**: The `tardigrade/vendor/main.tf` file that pins external modules; after running `make terraform/vendor`, modules are available at `tardigrade/vendor/.terraform/modules/<label>`
+- **Vendor**: One subdirectory per external module. `tardigrade/vendor/<label>/main.tf` holds a single `module "this"` with the pinned source; `tardigrade/vendor/main.tf` only lists `module "<label>" { source = "./<label>" }`. One `terraform init` in `vendor/` fetches everything; roots use `vendor/.terraform/modules/<label>.this`
+- **Dependency globs**: `tardigrade/roots/<root>/.tardigrade.config.yaml` lists `dependency_globs` (`vendor/<label>/**`, `modules/<name>/**`, data files) for what the root uses; a unit may add its own `.tardigrade.config.yaml`. `terragrunt-root.hcl` calls `mark_glob_as_read()` on them, so change detection (`terragrunt find --filter "[<base>...HEAD]"`) selects only units affected by a dependency update
 - **Template**: Starter files in `tardigrade/templates/<type>/` for creating new stacks
 - **Partition**: The cloud or partition directory (e.g., `aws`, `aws-us-gov`, `gcp`). For the AWS example: AWS partition (e.g., `aws`, `aws-us-gov`, `aws-cn`)
 - **Global region**: The primary region for each partition where global resources are deployed (e.g., `us-east-1` for `aws`, `us-gov-west-1` for `aws-us-gov`)

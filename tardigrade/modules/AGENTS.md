@@ -66,7 +66,19 @@ module "local_example" {
 }
 ```
 
-### 4. Validate
+### 4. Update Root's Dependency Globs
+
+Add `modules/<name>/**` to the root's `.tardigrade.config.yaml`:
+
+```yaml
+dependency_globs:
+  - modules/<name>/**
+  # other dependencies...
+```
+
+This ensures units using the root are replanned when the local module changes.
+
+### 5. Validate
 
 ```bash
 terraform -chdir=tardigrade/modules/<name> init -backend=false

@@ -1,12 +1,12 @@
 module "cloudtrail" {
-  source = "../../vendor/.terraform/modules/cloudtrail"
+  source = "../../vendor/.terraform/modules/cloudtrail.this"
 
   cloudtrail_name   = "${local.namespace}-cloudtrail"
   cloudtrail_bucket = var.cloudtrail_bucket
 }
 
 module "config" {
-  source = "../../vendor/.terraform/modules/config"
+  source = "../../vendor/.terraform/modules/config.this"
 
   config = {
     configuration_recorder = {
@@ -19,11 +19,11 @@ module "config" {
 }
 
 module "default_ebs_encryption" {
-  source = "../../vendor/.terraform/modules/ebs_encryption"
+  source = "../../vendor/.terraform/modules/ebs_encryption.this"
 }
 
 module "iam_account" {
-  source = "../../vendor/.terraform/modules/iam_account"
+  source = "../../vendor/.terraform/modules/iam_account.this"
 
   account_alias = {
     name = local.namespace
@@ -31,7 +31,7 @@ module "iam_account" {
 }
 
 module "guardduty" {
-  source = "../../vendor/.terraform/modules/guardduty/modules/member"
+  source = "../../vendor/.terraform/modules/guardduty.this/modules/member"
 
   providers = {
     aws               = aws
@@ -46,7 +46,7 @@ module "guardduty" {
 }
 
 module "securityhub" {
-  source = "../../vendor/.terraform/modules/security_hub_member/modules/cross-account-member"
+  source = "../../vendor/.terraform/modules/security_hub_member.this/modules/cross-account-member"
 
   providers = {
     aws               = aws

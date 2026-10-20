@@ -239,7 +239,7 @@ To use an external module in your tardigrade deployment:
 3. **Reference from a root module**:
   ```hcl
   module "vpc" {
-    source = "../../vendor/.terraform/modules/vpc"
+    source = "../../vendor/.terraform/modules/vpc.this"
     
     # module inputs
   }
