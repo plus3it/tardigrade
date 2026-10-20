@@ -26,7 +26,7 @@ PARTITIONS ?= aws
 ## Initializes repository by substituting placeholders and creating partition stacks
 init/repo: | guard/env/REPO_NAME guard/env/REPO_URL guard/env/GLOBAL_REGION guard/env/MANAGEMENT_ACCOUNT_ID guard/env/BACKEND_ROLE_NAME
 	@ echo "[$@]: Substituting placeholders..."
-	grep -rl '{{' tardigrade/ | xargs sed -i \
+	grep -rl --exclude='*.md' '{{' tardigrade/ | xargs sed -i \
 		-e 's|{{repo_name}}|$(REPO_NAME)|g' \
 		-e 's|{{repo_url}}|$(REPO_URL)|g' \
 		-e 's|{{global_region}}|$(GLOBAL_REGION)|g' \
