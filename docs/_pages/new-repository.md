@@ -19,7 +19,7 @@ If your deployment will be hosted on GitHub, use the tardigrade repository as a 
 3. Choose your organization and repository name
 4. Clone your new repository
 
-The template's default branch is `master`.
+New repositories use `main` as the default branch. The template's default branch is `master`, so rename the new repository's default branch to `main` (Settings → General → Default branch) before cloning it.
 
 ## GitLab or Other Hosts
 
@@ -35,6 +35,7 @@ For GitLab or other hosts:
   ```bash
   git remote remove origin
   git remote add origin <your-repo-url>
+  git branch -m master main
   ```
 
 3. Remove GitHub-specific files (for non-GitHub hosts):
@@ -47,8 +48,10 @@ For GitLab or other hosts:
 
 4. Push to your new repository:
   ```bash
-  git push -u origin master
+  git push -u origin main
   ```
+
+  Push `main` first so it becomes the default branch, and confirm the host's default branch setting is `main`.
 
 # Repository Initialization (for the AWS example)
 
