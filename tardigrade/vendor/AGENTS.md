@@ -4,7 +4,9 @@ This file describes how to add, upgrade, and reference external Terraform module
 
 ## What is Vendoring
 
-Vendoring downloads external modules to `tardigrade/vendor/.terraform/modules/` so roots can reference them via relative paths. This approach:
+Vendoring downloads external modules to `tardigrade/vendor/.terraform/modules/` so roots can reference them via relative paths. External modules can come from any source Terraform supports: public or private git repositories, or public or private Terraform registries.
+
+This approach:
 
 - Pins module versions explicitly in `vendor/main.tf`
 - Eliminates runtime calls to Git or HTTP during `terraform init` in units
@@ -16,12 +18,22 @@ Vendoring downloads external modules to `tardigrade/vendor/.terraform/modules/` 
 
 Open `tardigrade/vendor/main.tf` and add a new module block. Keep the labels in alphabetical order:
 
+Public module example:
 ```hcl
 module "<label>" {
   source = "git::https://github.com/plus3it/terraform-aws-tardigrade-<name>.git?ref=<version>"
   
   # Dummy inputs to satisfy variable requirements (not actually used)
   # Add required inputs here with null or dummy values
+}
+```
+
+Private git module example:
+```hcl
+module "<label>" {
+  source = "git::https://github.com/example-org/terraform-example-module.git?ref=<version>"
+  
+  # Dummy inputs
 }
 ```
 
@@ -88,6 +100,42 @@ Or read the local file after vendoring:
 ```bash
 cat vendor/.terraform/modules/<label>/variables.tf
 ```
+
+## Private Sources
+
+When using modules from private git repositories or private registries, configure authentication before running `make terraform/vendor`.
+
+### Source Formats
+
+**Git over HTTPS:**
+```hcl
+source = "git::https://github.com/example-org/terraform-example-module.git?ref=1.0.0"
+```
+
+**Git over SSH:**
+```hcl
+source = "git::ssh://git@github.com/example-org/terraform-example-module.git?ref=1.0.0"
+```
+
+**Private registry:**
+```hcl
+source = "registry.example.com/namespace/module"
+version = "1.0.0"
+```
+
+### Authentication
+
+Terraform uses the git client for git sources, so it respects your existing git credentials (SSH keys, git credential helpers, `.netrc` file).
+
+For private registries, use a CLI credentials block in `~/.terraformrc` or set a `TF_TOKEN_<hostname>` environment variable (replace dots with underscores).
+
+### CI Authentication
+
+Configure credentials before `make terraform/vendor` runs in CI. For example, GitLab CI can write `~/.netrc` with a job token, or GitHub Actions can configure git credentials with a personal access token.
+
+**Important:**
+- Never commit tokens or credentials to the repository
+- Prepare CI credential changes (adding CI variables, configuring job token permissions) for a person to review and apply
 
 ## Upgrade an External Module
 

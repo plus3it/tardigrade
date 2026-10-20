@@ -9,9 +9,17 @@ toc: true
 Tardigrade uses two types of modules:
 
 1. **Local modules** — Deployment-specific modules in `tardigrade/modules/`
-2. **Public modules** — Reusable modules in `plus3it/terraform-aws-tardigrade-*` repositories
+2. **External modules** — Reusable modules from any external source
 
-This guide covers both approaches.
+External modules can come from:
+- Public Plus3 IT `plus3it/terraform-aws-tardigrade-*` modules
+- Other public git repositories or the Terraform Registry
+- Private git repositories
+- Private Terraform registries
+
+External modules are pinned and vendored the same way regardless of source. See [vendor/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/vendor/AGENTS.md) for vendoring procedures.
+
+This guide covers local modules and how to create reusable modules.
 
 # Local Modules
 
@@ -39,25 +47,25 @@ Use local modules when:
 
 For detailed procedures, see [modules/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/modules/AGENTS.md).
 
-# Public Modules
+# Reusable Modules
 
-Public modules are published to the Terraform Registry and can be reused across deployments.
+Reusable modules are separate repositories that can be shared across tardigrade deployments. They may be public or private.
 
-## When to Use Public Modules
+## When to Create a Reusable Module
 
-Create a public module when:
+Create a reusable module when:
 - The module provides general-purpose infrastructure (e.g., S3 bucket, VPC, IAM role)
 - You want to share the module across multiple tardigrade deployments
 - The module implements a common security baseline or compliance control
 
-## Creating a Public Module
+## Creating a Reusable Module
 
-Public modules are separate repositories created from the [repo-template](https://github.com/plus3it/repo-template):
+Reusable modules are separate repositories created from the [repo-template](https://github.com/plus3it/repo-template). The repository can be public or private, hosted on GitHub, GitLab, or another git host.
 
 1. **Use the template**:
-    - Visit [https://github.com/plus3it/repo-template](https://github.com/plus3it/repo-template)
-    - Click "Use this template" → "Create a new repository"
-    - Name it `terraform-aws-tardigrade-<service>` (e.g., `terraform-aws-tardigrade-vpc`)
+    - For public modules on GitHub: visit [https://github.com/plus3it/repo-template](https://github.com/plus3it/repo-template), click "Use this template" → "Create a new repository"
+    - For private modules: clone repo-template to your organization's GitHub or GitLab
+    - Name it `terraform-<provider>-<name>` (e.g., `terraform-aws-vpc`). Plus3 IT public modules use the `terraform-aws-tardigrade-<service>` naming convention.
 
 2. **Edit AGENTS.md**: Fill in the "Repository-specific" section with the module's purpose and layout
 
@@ -113,27 +121,117 @@ make bumpversion/major   # 1.2.3 → 2.0.0 (breaking changes)
 
 Update `CHANGELOG.md` following [Keep a Changelog](http://keepachangelog.com/) format.
 
-#### Release Process
+#### Release Process and CI/CD
 
-Releases are automated:
+The release process depends on where the repository is hosted:
+
+**GitHub repositories:**
 1. Create a PR with the version bump and CHANGELOG update
 2. Merge the PR to the default branch (main or master)
-3. The `.github/workflows/release.yml` workflow creates a GitHub Release and tag automatically
+3. The `.github/workflows/release.yml` workflow (from [plus3it/actions-workflows](https://github.com/plus3it/actions-workflows)) creates a GitHub Release and tag automatically
+4. Dependabot (`.github/dependabot.yml`) opens dependency update PRs, and Mergify (`.mergify.yml`) auto-merges them
+
+**Other hosts (e.g., GitLab):**
+1. Create an MR with the version bump and CHANGELOG update
+2. Merge the MR to the default branch
+3. The host's CI pipeline (`.gitlab-ci.yml`) runs tests and creates a release tag. GitLab uses [reusable CI components](https://docs.gitlab.com/ee/ci/components/) for common workflows
+4. Renovate (`renovate.json`) opens dependency update merge requests
 
 For more details on module conventions, see [terraform-aws-tardigrade-acm/AGENTS.md](https://github.com/plus3it/terraform-aws-tardigrade-acm/blob/master/AGENTS.md).
 
-## Consuming Public Modules
+## Private Module Sources and Authentication
 
-To use a public module in your tardigrade deployment:
+When using modules from private git repositories or private registries, you must configure authentication where `make terraform/vendor` runs (locally and in CI).
+
+### Git Sources
+
+**HTTPS format:**
+```hcl
+module "example" {
+  source = "git::https://github.com/example-org/terraform-example-module.git?ref=1.0.0"
+}
+```
+
+**SSH format:**
+```hcl
+module "example" {
+  source = "git::ssh://git@github.com/example-org/terraform-example-module.git?ref=1.0.0"
+}
+```
+
+Terraform uses the git client to clone module sources, so it respects your existing git credentials:
+- **SSH keys** (with `git::ssh://` sources)
+- **Git credential helpers** (configured via `git config credential.helper`)
+- **`.netrc` file** (for HTTPS sources)
+
+### Private Registry Sources
+
+For private Terraform registries, use a CLI credentials block or environment variable:
+
+**CLI credentials** (in `~/.terraformrc` or `%APPDATA%\terraform.rc`):
+```hcl
+credentials "registry.example.com" {
+  token = "your-api-token"
+}
+```
+
+**Environment variable:**
+```bash
+export TF_TOKEN_registry_example_com="your-api-token"
+```
+
+Replace dots in the hostname with underscores for the environment variable name.
+
+### Authentication in CI
+
+Authentication must be configured before running `make terraform/vendor` in CI pipelines.
+
+**GitLab example** (using job tokens):
+```yaml
+before_script:
+  - echo -e "machine gitlab.com\nlogin gitlab-ci-token\npassword ${CI_JOB_TOKEN}" > ~/.netrc
+  - make terraform/vendor
+```
+
+Note: For `CI_JOB_TOKEN` to access a private project on GitLab, that project must allow the calling project in its "CI/CD → Job token permissions" settings.
+
+**GitHub Actions example** (using a token with read access, such as a fine-grained personal access token or a GitHub App token):
+```yaml
+- name: Configure git credentials
+  run: |
+    git config --global url."https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+- name: Vendor modules
+  run: make terraform/vendor
+```
+
+The token needs read access to the private repository.
+
+### Security
+
+- **Never commit tokens or credentials** to the repository
+- **Prepare CI credential changes for a person to review and apply** (e.g., adding CI variables, configuring job token permissions)
+
+## Consuming External Modules
+
+To use an external module in your tardigrade deployment:
 
 1. **Add to vendor/main.tf** (in alphabetical order):
+
+  Public module example:
   ```hcl
   module "vpc" {
     source = "git::https://github.com/plus3it/terraform-aws-tardigrade-vpc.git?ref=8.0.0"
   }
   ```
 
-2. **Vendor the module**:
+  Private git module example:
+  ```hcl
+  module "private_module" {
+    source = "git::https://github.com/example-org/terraform-example-module.git?ref=1.0.0"
+  }
+  ```
+
+2. **Vendor the module** (authentication must be configured first for private sources):
   ```bash
   make terraform/vendor
   ```
@@ -152,7 +250,7 @@ To use a public module in your tardigrade deployment:
   make terraform/lock
   ```
 
-For vendor procedures, see [vendor/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/vendor/AGENTS.md).
+For detailed vendor procedures, see [vendor/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/vendor/AGENTS.md).
 
 # Finding Existing Modules
 

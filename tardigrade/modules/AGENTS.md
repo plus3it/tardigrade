@@ -73,14 +73,14 @@ terraform -chdir=tardigrade/modules/<name> init -backend=false
 terraform -chdir=tardigrade/modules/<name> validate
 ```
 
-## When to Extract to a Public Module
+## When to Extract to a Reusable Module
 
 If a local module proves useful and could benefit other tardigrade deployments:
 
-1. Create a new `plus3it/terraform-aws-tardigrade-<name>` repository using the module template
+1. Create a new `terraform-<provider>-<name>` repository from repo-template (public on GitHub, or private on GitHub/GitLab)
 2. Move the module code to the new repository
-3. Add the public module to `tardigrade/vendor/main.tf`
+3. Add the module to `tardigrade/vendor/main.tf` (regardless of whether it's public or private)
 4. Update roots to reference the vendored module path
 5. Delete the local module
 
-Public modules have better visibility, testing (via mockstack), and version management than local modules.
+Reusable modules in separate repositories have better visibility, testing (via mockstack), and version management than local modules.
