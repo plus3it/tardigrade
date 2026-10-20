@@ -8,6 +8,10 @@
 # Local .terragrunt-cache directories
 .terragrunt-cache/
 
+# Terraform lock files (except vendor)
+.terraform.lock.hcl
+!tardigrade/vendor/.terraform.lock.hcl
+
 # Jekyll files
 _site/
 .jekyll-cache/
