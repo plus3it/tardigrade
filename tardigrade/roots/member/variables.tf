@@ -23,6 +23,11 @@ variable "config_bucket" {
   type        = string
 }
 
+variable "global_region" {
+  description = "Primary region for the partition where global resources are deployed"
+  type        = string
+}
+
 variable "tags" {
   description = "Map of tags to apply to the resources that support tags"
   type        = map(string)

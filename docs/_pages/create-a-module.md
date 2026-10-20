@@ -79,7 +79,7 @@ Reusable modules are separate repositories created from the [repo-template](http
 
 #### Testing
 
-Tests use [mockstack](https://github.com/plus3it/mockstack) to simulate AWS services:
+Tests use [mockstack](https://github.com/plus3it/tardigrade-ci/blob/master/INTEGRATION_TESTING.md) (via tardigrade-ci) to simulate AWS services:
 
 - Each test scenario lives in `tests/<scenario>/`
 - The scenario contains `main.tf` that uses the module
@@ -215,37 +215,44 @@ The token needs read access to the private repository.
 
 To use an external module in your tardigrade deployment:
 
-1. **Add to vendor/main.tf** (in alphabetical order):
+1. **Create a vendor directory** at `vendor/<label>/main.tf` containing a single `module "this"` block:
 
   Public module example:
   ```hcl
-  module "vpc" {
+  module "this" {
     source = "git::https://github.com/plus3it/terraform-aws-tardigrade-vpc.git?ref=8.0.0"
   }
   ```
 
   Private git module example:
   ```hcl
-  module "private_module" {
+  module "this" {
     source = "git::https://github.com/example-org/terraform-example-module.git?ref=1.0.0"
   }
   ```
 
-2. **Vendor the module** (authentication must be configured first for private sources):
+2. **Add module entry to `vendor/main.tf`** (in alphabetical order):
+  ```hcl
+  module "<label>" {
+    source = "./<label>"
+  }
+  ```
+
+3. **Vendor the module** (authentication must be configured first for private sources):
   ```bash
   make terraform/vendor
   ```
 
-3. **Reference from a root module**:
+4. **Reference from a root module**:
   ```hcl
   module "vpc" {
-    source = "../../vendor/.terraform/modules/vpc.this"
+    source = "../../vendor/.terraform/modules/<label>.this"
     
     # module inputs
   }
   ```
 
-4. **Update lock file** (for provider changes):
+5. **Update lock file** (for provider changes):
   ```bash
   make terraform/lock
   ```

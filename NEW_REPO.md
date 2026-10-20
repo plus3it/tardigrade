@@ -27,9 +27,9 @@ cd <repo-name>
 git checkout -b initial-setup
 ```
 
-### 3. Configure Repository Settings
+### 3. Configure Repository Settings (a person does this)
 
-Follow the checklist from the [repo-template README](https://github.com/plus3it/repo-template#readme):
+A person with repository admin access should follow the checklist from the [repo-template README](https://github.com/plus3it/repo-template#readme):
 
 - **GENERAL**
   - **Features**: Turn off Wikis, Sponsorships, Discussions, and Projects
@@ -44,6 +44,7 @@ Follow the checklist from the [repo-template README](https://github.com/plus3it/
     - Turn on Dismiss stale pull requests
   - **Required Status Checks**: Add checks like `lint/tardigradelint`, etc.
     - Turn on Do not allow bypassing the above settings
+- **README**: Replace README.md with deployment-specific content
 
 ## Option B: GitLab or Other Hosts
 
@@ -73,7 +74,7 @@ rm .mergify.yml
 
 Dependabot and Mergify only work on GitHub. On other hosts, dependency updates use Renovate: add a `renovate.json` at the repository root and run Renovate from the host's CI. Record the setup in AGENTS.md under Repository-specific → CI/CD.
 
-### 4. Push to New Remote
+### 4. Push to New Remote (a person does this)
 
 ```bash
 git push -u origin main  # Push main first so it becomes the default branch
@@ -84,7 +85,7 @@ git push -u origin initial-setup
 
 ### 1. Run make init/repo
 
-This substitutes placeholders and creates partition stacks. Provide all required variables. Note: these variables are specific to the AWS account-baseline example shipped with the template.
+This substitutes placeholders and creates partition directories. Provide all required variables. Note: these variables are specific to the AWS account-baseline example shipped with the template.
 
 ```bash
 make init/repo \
@@ -128,7 +129,14 @@ make init/repo \
   PARTITIONS="aws aws-us-gov"
 ```
 
-Note: `GLOBAL_REGION` refers to the primary region for the first partition (typically `aws`). GovCloud's global region is typically `us-gov-west-1`, but you'll set this per-account or per-partition in YAML configuration files.
+Note: `GLOBAL_REGION` and `MANAGEMENT_ACCOUNT_ID` substitute placeholders in the `aws` partition. After `make init/repo` copies `stacks/aws/` to `stacks/aws-us-gov/`, manually edit the copied partition:
+
+1. In `stacks/aws-us-gov/terragrunt-root.hcl`, change `global_region` from `us-east-1` to `us-gov-west-1`
+2. In `stacks/aws-us-gov/terragrunt-root.hcl`, update the `role_arn` account ID in `remote_state.config.assume_role`. The GovCloud management account ID always differs from the commercial management account ID.
+3. In `stacks/aws-us-gov/globals.tfvars.yaml`, update `management_account_id` and any other partition-specific values
+4. Templates hold the commercial management account ID and global-region directory. Units copied from templates into another partition need both the management account ID and region updated in dependency paths. Dependencies are never cross-partition.
+
+Repeat similar edits for `aws-cn` or other partitions.
 
 ### 2. Delete Documentation and Template Maintenance Section
 
@@ -140,12 +148,14 @@ rm -rf docs/
 
 Edit `AGENTS.md` and delete the entire "Maintaining the tardigrade template (plus3it/tardigrade only)" section (from the heading to the end of the file).
 
+Replace `README.md` with your deployment-specific content describing the repository's purpose, accounts, and credentials.
+
 ### 3. Reset Changelog and Release Automation
 
 Deployments are typically not released. Remove versioning and release automation files:
 
 ```bash
-rm .bumpversion.cfg .github/workflows/release.yml
+rm -f .bumpversion.cfg .github/workflows/release.yml
 ```
 
 Replace `CHANGELOG.md` with a fresh file containing a single initial entry:
@@ -192,13 +202,13 @@ You have two options:
 
 **Option 1: Create Manually**
 
-A person with appropriate AWS permissions should create the S3 bucket and DynamoDB table. Example AWS CLI commands:
+A person with appropriate AWS permissions should create the S3 bucket and DynamoDB table. Example AWS CLI commands (omit `--create-bucket-configuration` for `us-east-1`):
 
 ```bash
 aws s3api create-bucket \
   --bucket <repo-name>-tfstate \
   --region <global-region> \
-  --create-bucket-configuration LocationConstraint=<global-region>
+  --create-bucket-configuration LocationConstraint=<global-region>  # Omit this line for us-east-1
 
 aws s3api put-bucket-versioning \
   --bucket <repo-name>-tfstate \
@@ -221,7 +231,7 @@ aws dynamodb create-table \
 Terragrunt does not create the backend implicitly. A person with credentials for the management account runs, from the first unit:
 
 ```bash
-terragrunt backend bootstrap --working-dir tardigrade/stacks/<partition>/<account_id>/<region>/<root>
+terragrunt backend bootstrap --working-dir tardigrade/stacks/<partition>/<scope_id>/<region>/<root>
 ```
 
 This creates the bucket and lock table from the `remote_state` block in `terragrunt-root.hcl`, including its encryption and tags. Agents prepare this command; they do not run it.
@@ -250,7 +260,7 @@ make lint
 make terraform/validate-roots
 ```
 
-### 9. Commit and Open a PR
+### 9. Commit and Open a PR (a person does this)
 
 ```bash
 git rm NEW_REPO.md  # This file is only used once, during repository creation

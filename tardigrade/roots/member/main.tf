@@ -1,5 +1,6 @@
 module "cloudtrail" {
   source = "../../vendor/.terraform/modules/cloudtrail.this"
+  count  = local.is_global ? 1 : 0
 
   cloudtrail_name   = "${local.namespace}-cloudtrail"
   cloudtrail_bucket = var.cloudtrail_bucket
@@ -24,6 +25,7 @@ module "default_ebs_encryption" {
 
 module "iam_account" {
   source = "../../vendor/.terraform/modules/iam_account.this"
+  count  = local.is_global ? 1 : 0
 
   account_alias = {
     name = local.namespace

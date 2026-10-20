@@ -25,7 +25,7 @@ Some deployments use Gruntwork Pipelines for automated Terragrunt workflows:
 
 Spacelift provides a managed Terraform/Terragrunt platform:
 
-- Automatically detects changes to stacks
+- Automatically detects changes to Spacelift stacks
 - Supports drift detection and policy enforcement
 - Integrates with VCS for plan/apply workflows
 - Provides a web UI for reviewing plans and applying changes

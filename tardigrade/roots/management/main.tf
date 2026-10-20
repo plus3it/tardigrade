@@ -12,6 +12,7 @@ module "buckets" {
 
 module "cloudtrail" {
   source = "../../vendor/.terraform/modules/cloudtrail.this"
+  count  = local.is_global ? 1 : 0
 
   cloudtrail_name   = "${local.namespace}-cloudtrail"
   cloudtrail_bucket = module.buckets["cloudtrail"].bucket.id
@@ -36,6 +37,7 @@ module "default_ebs_encryption" {
 
 module "iam_account" {
   source = "../../vendor/.terraform/modules/iam_account.this"
+  count  = local.is_global ? 1 : 0
 
   account_alias = {
     name = local.namespace
@@ -44,7 +46,7 @@ module "iam_account" {
 
 module "saml_providers" {
   source   = "../../vendor/.terraform/modules/iam_identity_provider.this"
-  for_each = { for provider in var.saml_providers : provider.name => provider }
+  for_each = local.is_global ? { for provider in var.saml_providers : provider.name => provider } : {}
 
   iam_identity_provider = {
     saml = {

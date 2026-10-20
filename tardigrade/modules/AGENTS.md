@@ -10,7 +10,7 @@ Create a local module in `tardigrade/modules/<name>/` when:
 2. You need a quick prototype before extracting it to a public `terraform-aws-tardigrade-*` module
 3. The module wraps or combines vendor modules in a deployment-specific way
 
-For general-purpose AWS resource management that could benefit other users, create a public `plus3it/terraform-aws-tardigrade-*` module instead and vendor it via `tardigrade/vendor/main.tf`.
+For general-purpose AWS resource management that could benefit other users, create a public `plus3it/terraform-aws-tardigrade-*` module instead and vendor it via `tardigrade/vendor/<label>/main.tf` with a `module "this"` block, plus an entry in `vendor/main.tf`.
 
 ## Local Module Structure
 
@@ -91,8 +91,8 @@ If a local module proves useful and could benefit other tardigrade deployments:
 
 1. Create a new `terraform-<provider>-<name>` repository from repo-template (public on GitHub, or private on GitHub/GitLab)
 2. Move the module code to the new repository
-3. Add the module to `tardigrade/vendor/main.tf` (regardless of whether it's public or private)
-4. Update roots to reference the vendored module path
+3. Vendor the module: create `tardigrade/vendor/<label>/main.tf` with `module "this"` pointing to the module source, and add an entry in `vendor/main.tf` (see [vendor/AGENTS.md](../vendor/AGENTS.md))
+4. Update roots to reference the vendored module path at `vendor/.terraform/modules/<label>.this`
 5. Delete the local module
 
 Reusable modules in separate repositories have better visibility, testing (via mockstack), and version management than local modules.

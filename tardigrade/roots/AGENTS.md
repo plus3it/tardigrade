@@ -70,7 +70,7 @@ module "example_submodule" {
 }
 ```
 
-Check `vendor/main.tf` for the module label and `vendor/.terraform/modules/modules.json` (after running `make terraform/vendor`) to verify the exact Dir path for submodules.
+Check `vendor/<label>/main.tf` for the `module "this"` source and `vendor/main.tf` for the module label entry. After running `make terraform/vendor`, inspect `vendor/.terraform/modules/modules.json` to verify the exact Dir path for submodules.
 
 Reference local modules using relative paths:
 
@@ -113,9 +113,8 @@ This file enables change detection: when files matching these globs change, Terr
 ### 7. Validate the Root
 
 ```bash
-make terraform/vendor  # Ensure modules are vendored
-terraform -chdir=tardigrade/roots/<root> init -backend=false
-terraform -chdir=tardigrade/roots/<root> validate
+make terraform/vendor         # Ensure modules are vendored
+make terraform/validate-roots # Validates all roots against vendored modules
 ```
 
 ### 8. Create Matching Templates

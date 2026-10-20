@@ -15,6 +15,16 @@ dependency "global_region" {
 
 dependency "management" {
   config_path = "../../../{{management_account_id}}/{{global_region}}/management"
+
+  mock_outputs_allowed_terraform_commands = ["validate"]
+  mock_outputs = {
+    cloudtrail_bucket = {
+      id = "mock-cloudtrail-bucket"
+    }
+    config_bucket = {
+      id = "mock-config-bucket"
+    }
+  }
 }
 
 inputs = {

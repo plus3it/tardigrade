@@ -69,7 +69,7 @@ Set these environment variables before running `make init/repo`:
 
 ## Optional Variables
 
-- `PARTITIONS` — Space-separated list of partitions (default: `aws`). For AWS GovCloud: `PARTITIONS="aws aws-us-gov"`. For China: `PARTITIONS="aws aws-cn"`. For other clouds, use the cloud name (e.g., `gcp`, `azure`).
+- `PARTITIONS` — Space-separated list of AWS partitions (default: `aws`). For AWS GovCloud: `PARTITIONS="aws aws-us-gov"`. For China: `PARTITIONS="aws aws-cn"`. Each partition beyond the first requires manual edits after `make init/repo` (see NEW_REPO.md for details).
 
 ## Running Initialization
 

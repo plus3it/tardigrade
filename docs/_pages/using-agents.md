@@ -38,7 +38,7 @@ Claude Code automatically loads `AGENTS.md` when it sees this file.
 
 ## .gemini/settings.json
 
-Tells Gemini Code Assist to load `AGENTS.md`:
+Tells Gemini CLI to load `AGENTS.md`:
 
 ```json
 {
@@ -140,7 +140,7 @@ This keeps the human-facing documentation in sync with the agent instructions.
 The AGENTS.md format works with:
 
 - **Claude Code** (via `CLAUDE.md`)
-- **Gemini Code Assist** (via `.gemini/settings.json`)
+- **Gemini CLI** (via `.gemini/settings.json`)
 - **GitHub Copilot** (reads AGENTS.md when context is included)
 - **Cursor** (searches for AGENTS.md automatically)
 - **Any agent that can read repository files**

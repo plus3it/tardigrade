@@ -6,6 +6,7 @@ locals {
   account_id = data.aws_caller_identity.this.account_id
   partition  = data.aws_partition.this.partition
 
+  is_global = var.region == var.global_region
 
   account_name = lower(replace(var.account_name, "_", "-"))
   namespace    = lower(replace("${var.namespace}-${var.account_name}", "_", "-"))
