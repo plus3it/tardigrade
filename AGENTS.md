@@ -91,7 +91,7 @@ tardigrade organizes infrastructure into these layers, bottom to top:
 - **Stack**: A scope directory and all its units, `tardigrade/stacks/<partition>/<scope_id>/`. The scope is whatever the provider deploys into: an AWS account, a GCP project, an Azure subscription, and so on. "Add a stack" means onboarding a new scope (for AWS, an account). "Add a unit" means a new region or root in an existing stack. Note: this is NOT a `terragrunt.stack.hcl` file or a Spacelift stack. A deployment may also use terragrunt.stack.hcl files; when it does, say "Terragrunt stack file" for those.
 - **Root**: A Terraform root module in `tardigrade/roots/<root>/`, deployed by units.
 - **Module**: A local reusable module in `tardigrade/modules/<name>/`
-- **Public module**: A `plus3it/terraform-aws-tardigrade-*` repository
+- **External module**: A reusable module from any external source (public or private git repositories, public or private Terraform registries). Plus3 IT public modules use the `plus3it/terraform-aws-tardigrade-*` naming convention.
 - **Vendor**: The `tardigrade/vendor/main.tf` file that pins external modules; after running `make terraform/vendor`, modules are available at `tardigrade/vendor/.terraform/modules/<label>`
 - **Template**: Starter files in `tardigrade/templates/<type>/` for creating new stacks
 - **Partition**: The cloud or partition directory (e.g., `aws`, `aws-us-gov`, `gcp`). For the AWS example: AWS partition (e.g., `aws`, `aws-us-gov`, `aws-cn`)

@@ -72,7 +72,7 @@ The template's `make init/repo` target and template files currently target AWS. 
 - **Stack**: A scope directory and all its units: `stacks/<partition>/<scope_id>/`. The scope is whatever the provider deploys into: an AWS account, a GCP project, an Azure subscription, and so on. "Add a stack" means onboarding a new scope (for AWS, an account). Note: this is NOT a `terragrunt.stack.hcl` file or a Spacelift stack. A deployment may also use terragrunt.stack.hcl files; when it does, say "Terragrunt stack file" for those.
 - **Root**: A Terraform root module in `roots/<root>/`, deployed by units.
 - **Module**: A local reusable module in `modules/<name>/`.
-- **Public module**: A `plus3it/terraform-aws-tardigrade-*` repository created from the [repo-template](https://github.com/plus3it/repo-template).
+- **External module**: A reusable module from any external source (public or private git repositories, public or private Terraform registries). Plus3 IT public modules use the `plus3it/terraform-aws-tardigrade-*` naming convention and are created from the [repo-template](https://github.com/plus3it/repo-template).
 - **Vendor**: `vendor/main.tf` pins external modules; they are used as `vendor/.terraform/modules/<label>`.
 - **Partition**: The cloud or partition directory (e.g., `aws`, `aws-us-gov`, `gcp`). In the AWS example: an AWS partition (`aws` for commercial, `aws-us-gov` for GovCloud, `aws-cn` for China).
 
