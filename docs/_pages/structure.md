@@ -9,11 +9,14 @@ toc: true
 ```
 tardigrade/
 ├── vendor/                             # External module vendoring
-│   ├── main.tf                         # Module sources with pinned refs (alphabetical)
+│   ├── main.tf                         # References to vendor subdirectories (alphabetical)
 │   ├── versions.tf                     # Terraform and provider version pins
-│   └── .terraform.lock.hcl             # Provider lock file for multiple platforms
+│   ├── .terraform.lock.hcl             # Provider lock file for multiple platforms
+│   └── <label>/                        # One directory per external module
+│       └── main.tf                     # module "this" { source = "..." }
 ├── modules/<name>/                     # Local reusable modules
 ├── roots/<root>/                       # Terraform root modules (not tied to a partition)
+│   ├── .tardigrade.config.yaml         # Dependency globs for change detection
 │   ├── management/                     # Management account root
 │   └── member/                         # Member account root
 ├── templates/<type>/                   # Terragrunt unit templates for new accounts
@@ -73,14 +76,19 @@ The template's `make init/repo` target and template files currently target AWS. 
 - **Root**: A Terraform root module in `roots/<root>/`, deployed by units.
 - **Module**: A local reusable module in `modules/<name>/`.
 - **External module**: A reusable module from any external source (public or private git repositories, public or private Terraform registries). Plus3 IT public modules use the `plus3it/terraform-aws-tardigrade-*` naming convention and are created from the [repo-template](https://github.com/plus3it/repo-template).
-- **Vendor**: `vendor/main.tf` pins external modules; they are used as `vendor/.terraform/modules/<label>`.
+- **Vendor**: One subdirectory per external module. `vendor/<label>/main.tf` holds a single `module "this"` with the pinned source; `vendor/main.tf` only lists references to these directories. Roots use `vendor/.terraform/modules/<label>.this`.
+- **Dependency globs**: Each root's `.tardigrade.config.yaml` lists globs (`vendor/<label>/**`, `modules/<name>/**`) for its dependencies. Change detection uses these to determine which units need replanning.
 - **Partition**: The cloud or partition directory (e.g., `aws`, `aws-us-gov`, `gcp`). In the AWS example: an AWS partition (`aws` for commercial, `aws-us-gov` for GovCloud, `aws-cn` for China).
 
 ## Layer Details
 
 ### vendor/
 
-The `vendor/` directory pins external Terraform modules and providers. `main.tf` contains only module source references with pinned git refs (alphabetical order). Run `make terraform/vendor` to download modules to `vendor/.terraform/modules/`. Other modules reference them via relative paths like `../../vendor/.terraform/modules/<label>`.
+The `vendor/` directory pins external Terraform modules and providers. Each external module gets its own subdirectory with a `main.tf` file containing `module "this" { source = "..." }`. The root `vendor/main.tf` only lists references to these subdirectories (alphabetical order).
+
+Run `make terraform/vendor` to download modules to `vendor/.terraform/modules/`. Roots reference them via paths like `../../vendor/.terraform/modules/<label>.this`.
+
+This structure enables granular change detection: only units whose roots list `vendor/<label>/**` in their dependency globs are affected when that module changes.
 
 For procedures on adding external modules, see [vendor/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/vendor/AGENTS.md).
 
@@ -131,3 +139,16 @@ The `stacks/<partition>/terragrunt-root.hcl` file provides common configuration 
 Units outside the global region should depend on the global-region unit for the same root (defined in the unit's `terragrunt.hcl` `dependency` block).
 
 For procedures on managing stacks and units, see [stacks/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/stacks/AGENTS.md).
+
+## Change Detection
+
+Each root includes a `.tardigrade.config.yaml` file listing its `dependency_globs` — glob patterns (relative to `tardigrade/`) for vendored modules, local modules, and data files the root depends on. Examples: `vendor/cloudtrail/**`, `modules/okta/**`.
+
+The `terragrunt-root.hcl` file calls `mark_glob_as_read()` on these patterns. When you run `terragrunt find --filter "[<base>...HEAD]"`, Terragrunt identifies which units need replanning based on the files changed between commits.
+
+This is a core Terragrunt mechanism (not CI-specific). It ensures that:
+- Updating `vendor/cloudtrail/**` only affects units whose roots list it in their dependency globs
+- CI pipelines or Gruntwork Pipelines run plans only for affected units
+- Developers can quickly identify blast radius before applying changes
+
+Units may add their own `.tardigrade.config.yaml` with additional globs for unit-specific dependencies.

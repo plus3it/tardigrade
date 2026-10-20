@@ -6,21 +6,24 @@ This file describes how to add, upgrade, and reference external Terraform module
 
 Vendoring downloads external modules to `tardigrade/vendor/.terraform/modules/` so roots can reference them via relative paths. External modules can come from any source Terraform supports: public or private git repositories, or public or private Terraform registries.
 
+Each external module is vendored in its own directory under `vendor/<label>/`, containing a single `module "this"` block with the pinned source. The `vendor/main.tf` file only lists references to these directories.
+
 This approach:
 
-- Pins module versions explicitly in `vendor/main.tf`
+- Pins module versions explicitly in per-directory `vendor/<label>/main.tf` files
 - Eliminates runtime calls to Git or HTTP during `terraform init` in units
 - Keeps the repository self-contained for air-gapped environments
+- Enables granular change detection: only units whose roots list `vendor/<label>/**` are affected by updates to that module
 
 ## Add an External Module
 
-### 1. Add a Module Reference to vendor/main.tf
+### 1. Create a Vendor Directory
 
-Open `tardigrade/vendor/main.tf` and add a new module block. Keep the labels in alphabetical order:
+Create `tardigrade/vendor/<label>/main.tf` containing a single `module "this"` block with the pinned source. Use a descriptive label that matches the module's purpose:
 
 Public module example:
 ```hcl
-module "<label>" {
+module "this" {
   source = "git::https://github.com/plus3it/terraform-aws-tardigrade-<name>.git?ref=<version>"
   
   # Dummy inputs to satisfy variable requirements (not actually used)
@@ -30,18 +33,40 @@ module "<label>" {
 
 Private git module example:
 ```hcl
-module "<label>" {
+module "this" {
   source = "git::https://github.com/example-org/terraform-example-module.git?ref=<version>"
   
   # Dummy inputs
 }
 ```
 
-The `<label>` is how the module will be referenced after vendoring. Use a descriptive label that matches the module's purpose.
-
 For modules with required variables, provide dummy values (typically `null`) to satisfy `terraform init`. These values are not used; they exist only to make the module block valid.
 
-### 2. Run make terraform/vendor
+For modules with submodules, include the submodule path in the source:
+
+```hcl
+module "this" {
+  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-<name>.git//modules/<submodule>?ref=<version>"
+  
+  # Include any required providers block
+  providers = {
+    aws               = aws
+    aws.administrator = aws
+  }
+}
+```
+
+### 2. Add Module Entry to vendor/main.tf
+
+Open `tardigrade/vendor/main.tf` and add a reference to the new directory. Keep the labels in alphabetical order:
+
+```hcl
+module "<label>" {
+  source = "./<label>"
+}
+```
+
+### 3. Run make terraform/vendor
 
 ```bash
 make terraform/vendor
@@ -49,45 +74,49 @@ make terraform/vendor
 
 This runs `terraform init` in `vendor/`, downloading modules to `vendor/.terraform/modules/`. It also removes unused directories (`tests`, `examples`, `.github`, `.git`) to reduce repository size.
 
-### 3. Verify the Module Path
+### 4. Verify the Module Path
 
 Check `vendor/.terraform/modules/modules.json` to see the exact path where the module was installed:
 
 ```bash
-jq '.Modules[] | select(.Key == "<label>")' vendor/.terraform/modules/modules.json
+jq '.Modules[] | select(.Key == "<label>.this")' vendor/.terraform/modules/modules.json
 ```
 
-For modules with submodules (e.g., `cloudtrail//modules/s3-bucket`), the submodule path is appended. For example, if you vendor:
+The vendored module is accessible at `vendor/.terraform/modules/<label>.this`. For modules with submodules, the Dir field in modules.json shows the exact path (e.g., `.terraform/modules/<label>.this/modules/<submodule>`).
 
-```hcl
-module "security_hub_member" {
-  source = "git::https://github.com/plus3it/terraform-aws-tardigrade-security-hub.git//modules/cross-account-member?ref=5.0.0"
-}
-```
+### 5. Reference from Roots
 
-The path becomes `vendor/.terraform/modules/security_hub_member/modules/cross-account-member`.
-
-### 4. Reference from Roots
-
-From a root module (e.g., `roots/member/`), reference the vendored module:
+From a root module (e.g., `roots/member/`), reference the vendored module using the `.this` suffix:
 
 ```hcl
 module "example" {
-  source = "../../vendor/.terraform/modules/<label>"
+  source = "../../vendor/.terraform/modules/<label>.this"
   
   # actual inputs
 }
 ```
 
-For submodules, include the submodule path:
+For submodules, append the submodule path:
 
 ```hcl
 module "example_submodule" {
-  source = "../../vendor/.terraform/modules/<label>/modules/<submodule>"
+  source = "../../vendor/.terraform/modules/<label>.this/modules/<submodule>"
 }
 ```
 
-### 5. Read the Module's Variables
+### 6. Update Root's Dependency Globs
+
+Add `vendor/<label>/**` to the `dependency_globs` list in `tardigrade/roots/<root>/.tardigrade.config.yaml`:
+
+```yaml
+dependency_globs:
+  - vendor/<label>/**
+  # other dependencies...
+```
+
+This ensures that units using this root are re-planned when the vendored module changes.
+
+### 7. Read the Module's Variables
 
 Before using a vendored module in a root, read its `variables.tf` at the pinned ref. Module interfaces can change between major versions. Construct the URL:
 
@@ -98,7 +127,7 @@ https://github.com/plus3it/terraform-aws-tardigrade-<name>/blob/<version>/variab
 Or read the local file after vendoring:
 
 ```bash
-cat vendor/.terraform/modules/<label>/variables.tf
+cat vendor/.terraform/modules/<label>.this/variables.tf
 ```
 
 ## Private Sources
@@ -139,15 +168,17 @@ Configure credentials before `make terraform/vendor` runs in CI. For example, Gi
 
 ## Upgrade an External Module
 
-### 1. Update the ref in vendor/main.tf
+### 1. Update the ref in vendor/<label>/main.tf
 
-Change the `?ref=<version>` parameter to the new version:
+Open `tardigrade/vendor/<label>/main.tf` and change the `?ref=<version>` parameter to the new version:
 
 ```hcl
-module "<label>" {
+module "this" {
   source = "git::https://github.com/plus3it/terraform-aws-tardigrade-<name>.git?ref=<new_version>"
 }
 ```
+
+Because each external module has its own directory, only units of roots that list `vendor/<label>/**` in their dependency globs will be affected by this change.
 
 ### 2. Run make terraform/vendor
 

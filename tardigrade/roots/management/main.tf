@@ -1,5 +1,5 @@
 module "buckets" {
-  source   = "../../vendor/.terraform/modules/s3_bucket"
+  source   = "../../vendor/.terraform/modules/s3_bucket.this"
   for_each = { for bucket in local.buckets : bucket.label => bucket }
 
   bucket = each.value.name
@@ -11,14 +11,14 @@ module "buckets" {
 }
 
 module "cloudtrail" {
-  source = "../../vendor/.terraform/modules/cloudtrail"
+  source = "../../vendor/.terraform/modules/cloudtrail.this"
 
   cloudtrail_name   = "${local.namespace}-cloudtrail"
   cloudtrail_bucket = module.buckets["cloudtrail"].bucket.id
 }
 
 module "config" {
-  source = "../../vendor/.terraform/modules/config"
+  source = "../../vendor/.terraform/modules/config.this"
 
   config = {
     configuration_recorder = {
@@ -31,11 +31,11 @@ module "config" {
 }
 
 module "default_ebs_encryption" {
-  source = "../../vendor/.terraform/modules/ebs_encryption"
+  source = "../../vendor/.terraform/modules/ebs_encryption.this"
 }
 
 module "iam_account" {
-  source = "../../vendor/.terraform/modules/iam_account"
+  source = "../../vendor/.terraform/modules/iam_account.this"
 
   account_alias = {
     name = local.namespace
@@ -43,7 +43,7 @@ module "iam_account" {
 }
 
 module "saml_providers" {
-  source   = "../../vendor/.terraform/modules/iam_identity_provider"
+  source   = "../../vendor/.terraform/modules/iam_identity_provider.this"
   for_each = { for provider in var.saml_providers : provider.name => provider }
 
   iam_identity_provider = {
@@ -55,7 +55,7 @@ module "saml_providers" {
 }
 
 module "securityhub" {
-  source = "../../vendor/.terraform/modules/security_hub"
+  source = "../../vendor/.terraform/modules/security_hub.this"
 
   security_hub = {
     standard_subscription_arns = [

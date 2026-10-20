@@ -89,6 +89,19 @@ Edit the files to replace placeholders and verify dependencies.
         tardigrade/stacks/<partition>/<scope_id>/<global_region>/<new_root>
     ```
 
+## Unit-Level Dependency Globs (Optional)
+
+A unit may add its own `.tardigrade.config.yaml` with additional `dependency_globs` (paths relative to `tardigrade/`). These globs supplement the root's dependency globs for change detection.
+
+Use this sparingly and only for dependencies specific to one unit (e.g., a unit-specific data file). Never put state-affecting changes here; it only affects change detection via `terragrunt find --filter`.
+
+Example:
+
+```yaml
+dependency_globs:
+  - data/unit-specific-data.yaml
+```
+
 ## Inputs Precedence
 
 Terragrunt merges YAML configuration files in this order (later values override earlier ones):

@@ -24,6 +24,7 @@ A root typically contains:
 - `variables.tf` — Input variables
 - `outputs.tf` — Outputs (optional)
 - `locals.tf` — Local values (optional)
+- `.tardigrade.config.yaml` — Dependency globs for change detection (required)
 
 ### 3. Define the Variables Contract
 
@@ -51,25 +52,25 @@ Define variables for any YAML keys the root expects. For the AWS example, if `ac
 
 ### 4. Reference Modules
 
-Reference vendored modules using relative paths from the root to `vendor/.terraform/modules/<label>`:
+Reference vendored modules using relative paths from the root to `vendor/.terraform/modules/<label>.this`:
 
 ```hcl
 module "example" {
-  source = "../../vendor/.terraform/modules/<label>"
+  source = "../../vendor/.terraform/modules/<label>.this"
   
   # inputs
 }
 ```
 
-For modules with submodules (e.g., `cloudtrail//modules/s3-bucket`), the vendored path becomes:
+For modules with submodules, the vendored path becomes:
 
 ```hcl
 module "example_submodule" {
-  source = "../../vendor/.terraform/modules/<label>/modules/<submodule>"
+  source = "../../vendor/.terraform/modules/<label>.this/modules/<submodule>"
 }
 ```
 
-Check `vendor/main.tf` for the module label and `vendor/.terraform/modules/modules.json` (after running `make terraform/vendor`) to verify submodule paths.
+Check `vendor/main.tf` for the module label and `vendor/.terraform/modules/modules.json` (after running `make terraform/vendor`) to verify the exact Dir path for submodules.
 
 Reference local modules using relative paths:
 
@@ -91,7 +92,25 @@ For other providers, the configuration will differ (e.g., `google` provider for 
 
 If the root needs additional providers or provider aliases, document them in a comment at the top of `main.tf`.
 
-### 6. Validate the Root
+### 6. Create the Dependency Globs File
+
+Create `tardigrade/roots/<root>/.tardigrade.config.yaml` listing all dependencies the root uses. Paths are relative to `tardigrade/`:
+
+```yaml
+dependency_globs:
+  - vendor/<label>/**
+  - modules/<name>/**
+  # Add other files or directories the root depends on
+```
+
+Include:
+- `vendor/<label>/**` for each vendored module the root uses
+- `modules/<name>/**` for each local module the root uses
+- Any data files or other resources under `tardigrade/` that the root depends on
+
+This file enables change detection: when files matching these globs change, Terragrunt knows which units need replanning. See [tardigrade/vendor/AGENTS.md](../vendor/AGENTS.md) for details on how this affects module upgrades.
+
+### 7. Validate the Root
 
 ```bash
 make terraform/vendor  # Ensure modules are vendored
@@ -99,7 +118,7 @@ terraform -chdir=tardigrade/roots/<root> init -backend=false
 terraform -chdir=tardigrade/roots/<root> validate
 ```
 
-### 7. Create Matching Templates
+### 8. Create Matching Templates
 
 For each root, create matching templates so new stacks can deploy the root easily:
 
@@ -110,13 +129,22 @@ mkdir -p tardigrade/templates/<type>/regional/<root>
 
 See [tardigrade/templates/AGENTS.md](../templates/AGENTS.md) for template conventions.
 
-### 8. Report Affected Units
+### 9. Report Affected Units
 
 A change to a root affects every unit that uses it. In your final report, list the affected units for a person or CI to plan. Find them with:
 
 ```bash
 find tardigrade/stacks -path '*/<root>/terragrunt.hcl'
 ```
+
+## Maintaining Dependency Globs
+
+Whenever a root starts or stops using a vendored module, local module, or other dependency, update its `.tardigrade.config.yaml` accordingly:
+
+- **Adding a dependency:** Add the glob pattern to `dependency_globs`
+- **Removing a dependency:** Remove the glob pattern from `dependency_globs`
+
+Accurate dependency globs ensure that only affected units are replanned when dependencies change. This is especially important for CI/CD pipelines and large deployments.
 
 ## Example Root Structure
 
