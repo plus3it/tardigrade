@@ -1,0 +1,242 @@
+# Creating a New Deployment Repository
+
+This document describes how to create a new tardigrade deployment repository from the plus3it/tardigrade template.
+
+## Prerequisites
+
+- AWS management account with appropriate permissions
+- S3 bucket and DynamoDB table for Terraform state (see State Backend Prerequisites below)
+- IAM role for Terraform backend access in the management account
+
+## Option A: GitHub (Recommended)
+
+### 1. Use This Template
+
+Click the green "Use this template" button on the plus3it/tardigrade repository page, or visit:
+https://github.com/plus3it/tardigrade/generate
+
+Select the repository owner, give it a name (e.g., `acme-tardigrade`), enter a description, select Public or Private, and click "Create repository from template".
+
+### 2. Clone and Create a Branch
+
+```bash
+git clone <your-new-repo-url>
+cd <repo-name>
+git checkout -b initial-setup
+```
+
+### 3. Configure Repository Settings
+
+Follow the checklist from the [repo-template README](https://github.com/plus3it/repo-template#readme):
+
+- **GENERAL**
+  - **Features**: Turn off Wikis, Sponsorships, Discussions, and Projects
+  - **Pull Requests**: Turn off Squash Merging and Rebase Merging; turn on Allow Auto-Merge and Automatically delete head branches
+  - **Pushes**: Limit how many branches can be updated in a single push: 2
+- **COLLABORATORS and TEAMS**
+  - **Manage Access**: Add relevant team roles (e.g., `tardigrade-admins` Admin, `terraform` Write, `releasebot` Write)
+- **Branches**
+  - **Create Branch Protection rule** for `main`:
+    - Turn on Require pull request before merging
+    - Turn on Require approvals
+    - Turn on Dismiss stale pull requests
+  - **Required Status Checks**: Add checks like `lint/tardigradelint`, etc.
+    - Turn on Do not allow bypassing the above settings
+
+## Option B: GitLab or Other Hosts
+
+### 1. Clone the Template
+
+```bash
+git clone https://github.com/plus3it/tardigrade.git <repo-name>
+cd <repo-name>
+```
+
+### 2. Set New Remote
+
+```bash
+git remote set-url origin <your-new-repo-url>
+git checkout -b initial-setup
+```
+
+### 3. Push to New Remote
+
+```bash
+git push -u origin main
+git push -u origin initial-setup
+```
+
+## Customize the Repository
+
+### 1. Run make init/repo
+
+This substitutes placeholders and creates partition stacks. Provide all required variables:
+
+```bash
+make init/repo \
+  REPO_NAME=<repo-name> \
+  REPO_URL=<repo-web-url> \
+  GLOBAL_REGION=<primary-region> \
+  MANAGEMENT_ACCOUNT_ID=<12-digit-account-id> \
+  BACKEND_ROLE_NAME=<role-name> \
+  PARTITIONS="<space-separated-partitions>"
+```
+
+**Variables:**
+- `REPO_NAME`: Repository name (e.g., `acme-tardigrade`)
+- `REPO_URL`: Web URL (e.g., `https://github.com/acme/acme-tardigrade` or `https://gitlab.com/acme/acme-tardigrade`)
+- `GLOBAL_REGION`: Primary region for the default partition (e.g., `us-east-1` for `aws`, `us-gov-west-1` for `aws-us-gov`)
+- `MANAGEMENT_ACCOUNT_ID`: 12-digit AWS account ID of your management account
+- `BACKEND_ROLE_NAME`: IAM role name for Terraform backend access (e.g., `TerraformStateRole`)
+- `PARTITIONS`: Space-separated partition list (e.g., `"aws"` or `"aws aws-us-gov"`). The `aws` partition already exists; additional partitions are created by copying `stacks/aws/`.
+
+**Example:**
+
+```bash
+make init/repo \
+  REPO_NAME=acme-tardigrade \
+  REPO_URL=https://github.com/acme/acme-tardigrade \
+  GLOBAL_REGION=us-east-1 \
+  MANAGEMENT_ACCOUNT_ID=123456789012 \
+  BACKEND_ROLE_NAME=TerraformStateRole \
+  PARTITIONS="aws"
+```
+
+For GovCloud and commercial AWS:
+
+```bash
+make init/repo \
+  REPO_NAME=acme-tardigrade \
+  REPO_URL=https://github.com/acme/acme-tardigrade \
+  GLOBAL_REGION=us-east-1 \
+  MANAGEMENT_ACCOUNT_ID=123456789012 \
+  BACKEND_ROLE_NAME=TerraformStateRole \
+  PARTITIONS="aws aws-us-gov"
+```
+
+Note: `GLOBAL_REGION` refers to the primary region for the first partition (typically `aws`). GovCloud's global region is typically `us-gov-west-1`, but you'll set this per-account or per-partition in YAML configuration files.
+
+### 2. Delete Documentation and Template Maintenance Section
+
+The `docs/` directory and the "Maintaining the tardigrade template" section in `AGENTS.md` apply only to the plus3it/tardigrade template repository. Remove them from deployment repositories:
+
+```bash
+rm -rf docs/
+```
+
+Edit `AGENTS.md` and delete the entire "Maintaining the tardigrade template (plus3it/tardigrade only)" section (from the heading to the end of the file).
+
+### 3. Reset Changelog and Version
+
+Copy the template changelog and reset the version:
+
+```bash
+cp CHANGELOG.template.md CHANGELOG.md
+```
+
+Edit `CHANGELOG.md` and replace placeholder items with your repository information.
+
+Edit `.bumpversion.cfg` and set the initial version (typically `0.0.0` or `0.1.0`).
+
+See the [repo-template README](https://github.com/plus3it/repo-template#readme) for detailed guidance on changelog and versioning conventions.
+
+### 4. Edit Repository-specific Sections
+
+Edit `AGENTS.md` and fill in the "Repository-specific" section:
+
+- **Purpose**: Describe what this deployment manages (e.g., "Manages AWS account baselines for ACME Corp's commercial and GovCloud environments")
+- **Accounts and Partitions**: List the partitions, accounts, and their purposes
+- **Credentials**: Describe how to authenticate for local operations (e.g., AWS profile, aws-vault, OIDC)
+- **CI/CD**: Describe how plan/apply run (GitHub Actions, GitLab CI, Spacelift, etc.). If you don't have CI/CD set up yet, state that explicitly.
+
+### 5. Create State Backend Prerequisites
+
+Terraform state requires an S3 bucket and DynamoDB table in the management account. The bucket and table names are derived from `REPO_NAME`:
+
+- S3 bucket: `<repo-name>-tfstate`
+- DynamoDB table: `<repo-name>-tfstate-lock`
+
+You have two options:
+
+**Option 1: Create Manually**
+
+A person with appropriate AWS permissions should create the S3 bucket and DynamoDB table. Example AWS CLI commands:
+
+```bash
+aws s3api create-bucket \
+  --bucket <repo-name>-tfstate \
+  --region <global-region> \
+  --create-bucket-configuration LocationConstraint=<global-region>
+
+aws s3api put-bucket-versioning \
+  --bucket <repo-name>-tfstate \
+  --versioning-configuration Status=Enabled
+
+aws s3api put-bucket-encryption \
+  --bucket <repo-name>-tfstate \
+  --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SSEAlgorithm":"AES256"}}]}'
+
+aws dynamodb create-table \
+  --table-name <repo-name>-tfstate-lock \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST \
+  --region <global-region>
+```
+
+**Option 2: Terragrunt backend bootstrap**
+
+Terragrunt does not create the backend implicitly. A person with credentials for the management account runs, from the first unit:
+
+```bash
+terragrunt backend bootstrap --working-dir tardigrade/stacks/<partition>/<account_id>/<region>/<root>
+```
+
+This creates the bucket and lock table from the `remote_state` block in `terragrunt-root.hcl`, including its encryption and tags. Agents prepare this command; they do not run it.
+
+### 6. Add the First Stacks
+
+Follow the instructions in [tardigrade/stacks/AGENTS.md](tardigrade/stacks/AGENTS.md) to onboard your first AWS accounts.
+
+Typically, start with the management account:
+
+```bash
+cp tardigrade/templates/management/account.tfvars.yaml \
+    tardigrade/stacks/aws/<management-account-id>/account.tfvars.yaml
+
+cp -r tardigrade/templates/management/global/management \
+    tardigrade/stacks/aws/<management-account-id>/<global-region>/management
+```
+
+Edit the YAML and Terragrunt files to replace any remaining placeholders and fill in account-specific values.
+
+### 7. Validate
+
+```bash
+make terraform/vendor
+make lint
+terraform -chdir=tardigrade/roots/management init -backend=false
+terraform -chdir=tardigrade/roots/management validate
+```
+
+### 8. Commit and Open a PR
+
+```bash
+git add -A
+git status  # Review staged files for anything sensitive
+git commit -m "Initial tardigrade deployment setup"
+git push -u origin initial-setup
+```
+
+Open a pull request for review.
+
+### 9. Delete This File
+
+After the initial setup PR is merged, delete `NEW_REPO.md`:
+
+```bash
+git rm NEW_REPO.md
+git commit -m "Remove NEW_REPO.md after initial setup"
+```
+
+This file is only used once, during repository creation.
