@@ -42,6 +42,11 @@ Additionally, roots receive all keys from the merged YAML files:
 
 Define variables for any YAML keys the root expects. For example, if `account.tfvars.yaml` contains `account_name` and `email_address`, declare those variables in `variables.tf`.
 
+#### Where to Put Values
+
+- **Deployment-wide values** (set once for the entire deployment): `tardigrade/stacks/<partition>/<root>.tfvars.yaml` (verified: `terragrunt-root.hcl` loads this file)
+- **Per-account values** (different for each account): `tardigrade/stacks/<partition>/<account_id>/account.tfvars.yaml`
+
 ### 4. Reference Modules
 
 Reference vendored modules using relative paths from the root to `vendor/.terraform/modules/<label>`:
@@ -100,6 +105,14 @@ mkdir -p tardigrade/templates/<type>/regional/<root>
 ```
 
 See [tardigrade/templates/AGENTS.md](../templates/AGENTS.md) for template conventions.
+
+### 8. Report Affected Units
+
+A change to a root affects every unit that uses it. In your final report, list the affected units for a person or CI to plan. Find them with:
+
+```bash
+find tardigrade/stacks -path '*/<root>/terragrunt.hcl'
+```
 
 ## Example Root Structure
 

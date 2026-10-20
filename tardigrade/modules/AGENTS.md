@@ -37,7 +37,7 @@ mkdir -p tardigrade/modules/<name>
 
 Create `main.tf`, `variables.tf`, and `outputs.tf` with the module logic.
 
-If the module uses AWS providers, create `versions.tf`:
+If the module uses AWS providers, create `versions.tf` with minimum version constraints:
 
 ```hcl
 terraform {
@@ -52,7 +52,7 @@ terraform {
 }
 ```
 
-Match the Terraform version constraint to the version in `.mise.toml`.
+Match the Terraform version constraint to the version in `.mise.toml`. Local modules declare only minimum version constraints (`>=`); exact terraform and provider pins live in `tardigrade/vendor/versions.tf`.
 
 ### 3. Reference from Roots
 

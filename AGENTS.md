@@ -6,6 +6,19 @@ This file provides instructions for AI agents working with Plus3IT repositories.
 
 Plus3IT repositories follow a standardized structure using tardigrade-ci tooling for development, testing, and releases. Most repositories are hosted on GitHub and use reusable workflows from plus3it/actions-workflows.
 
+## Before you finish
+
+Before reporting your work as complete:
+
+1. Run `make lint` to catch formatting and style issues
+2. Run tests as described in the Repository-specific → Testing section
+3. For user-visible changes in repos with `.bumpversion.cfg`:
+    - Update `CHANGELOG.md` following [Keep a Changelog](http://keepachangelog.com/) format
+    - Choose the appropriate version bump (`make bumpversion/patch`, `minor`, or `major`)
+    - Include both changes in the same commit
+4. Regenerate any maintained documentation (e.g., `make docs/generate` for Terraform module READMEs)
+5. In your final report, list everything a person must still do: pushes, pull requests, applies, account or credential setup, and anything you could not verify
+
 ## Tooling
 
 All Plus3IT repositories include tardigrade-ci, a Docker-based test framework that provides standardized make targets for development tasks.
