@@ -11,18 +11,18 @@ with Terragrunt and Terraform. Currently, this implementation demonstrates the
 ability to manage AWS accounts, but can easily be extended to manage accounts on
 other cloud platforms.
 
+The framework provides a layered structure for managing infrastructure deployments
+across multiple accounts, regions, and AWS partitions (commercial, GovCloud, China).
+
 # Prerequisites
-* [terraform >= 0.12](https://www.terraform.io/)
-  - credentials configured for an AWS account
-* [terragrunt >= v0.21](https://github.com/gruntwork-io/terragrunt)
 
-# How To Use
-You can use the following command to see the baseline infrastructure deployed to
-your account:
+Tool versions are pinned in `.mise.toml`. Install [mise](https://mise.jdx.dev/) to ensure you're using the correct versions:
 
+```bash
+mise install
 ```
-terragrunt plan --terragrunt-working-dir tardigrade/configs/aws/{account_id}/base
-```
+
+You'll also need AWS credentials configured through the standard AWS credential chain (AWS_PROFILE, environment variables, or CI OIDC).
 
 # Terraform Modules
 As part of creating a baseline configuration for cloud accounts we have created
