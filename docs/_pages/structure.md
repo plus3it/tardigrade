@@ -5,57 +5,97 @@ toc: true
 ---
 
 # File Structure
+
 ```
 tardigrade/
-├── configs                                # Container for terragrunt configs
-│   └── aws                                # AWS partition
-│       ├── {management_account_id}        # Idempotent identifier for management account configurations
-│       │   └── management                 # Baseline teragrunt configuration for management account
-│       └── {member_account_id...}         # Idempotent identifier for member account configurations
-│           └── member                     # Baseline terragrunt configuration for member account
-├── roots                                  # Container for terraform root modules
-│   └── aws                                # AWS partition
-│       ├── management                     # Management root module
-│       │   └── policy_templates           # Container for policy templates used by management config
-│       └── member                         # Member root module
-└── templates                              # Container for terragrunt template configs
-    └── aws                                # AWS partition
-        ├── member                         # Terragrunt config template for member accounts
-        └── management                     # Terragrunt config template for management accounts
+├── vendor/                             # External module vendoring
+│   ├── main.tf                         # Module sources with pinned refs (alphabetical)
+│   ├── versions.tf                     # Terraform and provider version pins
+│   └── .terraform.lock.hcl             # Provider lock file for multiple platforms
+├── modules/<name>/                     # Local reusable modules
+├── roots/<root>/                       # Terraform root modules (not tied to a partition)
+│   ├── management/                     # Management account root
+│   └── member/                         # Member account root
+├── templates/<type>/                   # Terragrunt unit templates for new accounts
+│   ├── management/
+│   │   ├── account.tfvars.yaml
+│   │   └── global/<root>/              # Units for the global region
+│   │       ├── terragrunt.hcl
+│   │       └── terraform.tfvars
+│   └── member/
+│       ├── account.tfvars.yaml
+│       ├── global/<root>/              # Units for the global region
+│       └── regional/<root>/            # Units for non-global regions
+└── stacks/<partition>/                 # Deployed units (one state file per unit)
+    ├── terragrunt-root.hcl             # Root Terragrunt config for all units
+    ├── providers.tf                    # Provider configuration template
+    ├── globals.tfvars.yaml             # Partition-level variables
+    ├── <root>.tfvars.yaml              # Root-specific variables (optional)
+    └── <account_id>/                   # Account directories (stacks)
+        ├── account.tfvars.yaml         # Account-level variables
+        └── <region>/<root>/            # Units: terragrunt.hcl + terraform.tfvars
 ```
 
-## Partition
-In this example, the partition is aws (i.e., `tardigrade/configs/aws`). Generally
-speaking, most AWS implementations of tardigrade will only use the `aws` partition.
-The `aws` partition is the commercial partition that most people are familiar with.
-There are other partitions though, such as AWS GovCloud (`aws-us-gov`) and AWS China
-(`aws-cn`)
+## Glossary
 
-### Idempotent Element
-Each directory at this level (e.g., `tardigrade/configs/aws/{accounts...}`) represents
-an individual account. For AWS, the account number is an idempotent value so we
-used that to represent individual accounts. The names of these directories do not
-influence the operation of this framework in any way. They simply serve as a mechanism
-for developers to easily identify the account.
+- **Unit**: A directory containing `terragrunt.hcl`. One unit has one state file. Path: `stacks/<partition>/<account_id>/<region>/<root>/`
+- **Stack**: An account directory and all its units: `stacks/<partition>/<account_id>/`. "Add a stack" means onboarding an account.
+- **Root**: A Terraform root module in `roots/<root>/`, deployed by units.
+- **Module**: A local reusable module in `modules/<name>/`.
+- **Public module**: A `plus3it/terraform-aws-tardigrade-*` repository created from the [repo-template](https://github.com/plus3it/repo-template).
+- **Vendor**: `vendor/main.tf` pins external modules; they are used as `vendor/.terraform/modules/<label>`.
+- **Partition**: An AWS partition: `aws` (commercial), `aws-us-gov` (GovCloud), or `aws-cn` (China).
 
-Each directory at this level represents an individual account. Account level configurations
-are stored here and are applied within the context of the target account. Specific
-elements of the account level configuration are described below.
+## Layer Details
 
-#### Baseline
-This directory has the following files:
+### vendor/
 
-```
-base
-├── terraform.tfvars         # defines config-specific variables
-└── terragrunt.hcl           # terragrunt configuration
-```
+The `vendor/` directory pins external Terraform modules and providers. `main.tf` contains only module source references with pinned git refs (alphabetical order). Run `make terraform/vendor` to download modules to `vendor/.terraform/modules/`. Other modules reference them via relative paths like `../../vendor/.terraform/modules/<label>`.
 
-## roots/aws/<baseline>
-This directory contains the terraform modules that tie together the various terraform
-components to comprise an infrastructure baseline to be deployed to every account
-of a given type.
+For procedures on adding external modules, see [vendor/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/vendor/AGENTS.md).
 
-## templates/aws/<template>
-This directory contains template terragrunt configs that can be copied into the
-`configs/aws/{account}` directory to quickly instantiate a new account.
+### modules/
+
+Local reusable modules that are specific to this deployment. For guidelines on creating modules, see the [create-a-module]({{ "/create-a-module/" | relative_url }}) guide.
+
+### roots/
+
+Terraform root modules that define what gets deployed. Roots are not tied to a specific partition. Each root module typically combines multiple vendor and local modules into a deployable baseline.
+
+For procedures on adding roots, see [roots/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/roots/AGENTS.md).
+
+### templates/
+
+Template files for creating new units (account + region combinations). Templates are organized by account type (management, member). The `global/` subdirectory contains units for the global region; `regional/` contains units for other regions.
+
+When creating a new stack, copy the appropriate template directory into `stacks/<partition>/<account_id>/`.
+
+For template conventions, see [templates/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/templates/AGENTS.md).
+
+### stacks/
+
+Deployed units organized by partition, account, and region. Each unit directory contains `terragrunt.hcl` and `terraform.tfvars`.
+
+#### terragrunt-root.hcl Behavior
+
+The `stacks/<partition>/terragrunt-root.hcl` file provides common configuration for all units in the partition:
+
+**Path parsing**: Extracts `account_id`, `region`, and `root` from the unit path relative to the partition directory (`path_relative_to_include()`). The partition name itself comes from `basename(get_parent_terragrunt_dir())`.
+
+**State key**: Derived from the unit path relative to `stacks/<partition>` using `path_relative_to_include()`. Format: `tfstate/<account_id>/<region>/<root>/terraform.tfstate`
+
+**Generated files** (overwritten on every Terragrunt run):
+- `backend.tf` — S3 backend configuration with state bucket and DynamoDB lock table
+- `providers.tf` — Provider configuration copied from `stacks/<partition>/providers.tf`
+- `versions.tf` — Copied from `vendor/versions.tf`
+- `.terraform.lock.hcl` — Copied from `vendor/.terraform.lock.hcl`
+
+**Input merge order** (later values override earlier):
+1. `globals.tfvars.yaml` (partition-level)
+2. `<root>.tfvars.yaml` (root-specific, optional)
+3. `account.tfvars.yaml` (account-level)
+4. Computed values: `account_id`, `region`, `partition`, `session_name`, `default_tags`
+
+Units outside the global region should depend on the global-region unit for the same root (defined in the unit's `terragrunt.hcl` `dependency` block).
+
+For procedures on managing stacks and units, see [stacks/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/stacks/AGENTS.md).
