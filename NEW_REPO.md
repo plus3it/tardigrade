@@ -15,7 +15,9 @@ This document describes how to create a new tardigrade deployment repository fro
 Click the green "Use this template" button on the plus3it/tardigrade repository page, or visit:
 https://github.com/plus3it/tardigrade/generate
 
-Select the repository owner, give it a name (e.g., `acme-tardigrade`), enter a description, select Public or Private, and click "Create repository from template". The template repository's default branch is `master`.
+Select the repository owner, give it a name (e.g., `acme-tardigrade`), enter a description, select Public or Private, and click "Create repository from template".
+
+New repositories use `main` as the default branch. The template's default branch is `master`, so the new repository starts with `master`. Rename it before cloning: in the new repository, go to Settings → General → Default branch, rename `master` to `main` (or run `gh api -X POST repos/<owner>/<repo>/branches/master/rename -f new_name=main`).
 
 ### 2. Clone and Create a Branch
 
@@ -56,6 +58,7 @@ cd <repo-name>
 
 ```bash
 git remote set-url origin <your-new-repo-url>
+git branch -m master main  # New repositories use main as the default branch
 git checkout -b initial-setup
 ```
 
@@ -73,7 +76,7 @@ Dependabot and Mergify only work on GitHub. On other hosts, dependency updates u
 ### 4. Push to New Remote
 
 ```bash
-git push -u origin master
+git push -u origin main  # Push main first so it becomes the default branch
 git push -u origin initial-setup
 ```
 
