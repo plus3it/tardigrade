@@ -6,7 +6,7 @@ toc: true
 
 # Overview
 
-Tardigrade repositories include instructions for AI agents to assist with common tasks. These instructions follow a cross-tool standard that works with Claude, Gemini, and other AI coding assistants.
+Tardigrade repositories include instructions for AI agents to assist with common tasks. These instructions use `AGENTS.md`, a cross-tool standard that most AI coding agents read directly.
 
 # AGENTS.md Files
 
@@ -22,31 +22,11 @@ Each tardigrade repository contains an `AGENTS.md` file at the root. Some reposi
 
 These files are written for AI agents, but humans can read them too.
 
-# Pointer Files
+# No Tool-Specific Files
 
-To help agents discover the instructions automatically, repositories include pointer files:
+Repositories contain only `AGENTS.md` files. Don't add tool-specific instruction files such as `CLAUDE.md` or `GEMINI.md`: most agent tools read `AGENTS.md` directly, and some tools read only their own file when it exists. For example, Claude Code skips `AGENTS.md` files, including nested ones, when a `CLAUDE.md` is present.
 
-## CLAUDE.md
-
-A single line that tells Claude Code where to find instructions:
-
-```markdown
-@AGENTS.md
-```
-
-Claude Code automatically loads `AGENTS.md` when it sees this file.
-
-## .gemini/settings.json
-
-Tells Gemini CLI to load `AGENTS.md`:
-
-```json
-{
-    "context": {
-        "fileName": "AGENTS.md"
-    }
-}
-```
+If a tool you use doesn't read `AGENTS.md`, configure it in your own user settings to load `AGENTS.md`, or ask the agent to read it at the start of a session.
 
 # What's in AGENTS.md
 
@@ -137,12 +117,12 @@ This keeps the human-facing documentation in sync with the agent instructions.
 
 # Supported Tools
 
-The AGENTS.md format works with:
+Agents that read `AGENTS.md` directly include:
 
-- **Claude Code** (via `CLAUDE.md`)
-- **Gemini CLI** (via `.gemini/settings.json`)
-- **GitHub Copilot** (reads AGENTS.md when context is included)
-- **Cursor** (searches for AGENTS.md automatically)
-- **Any agent that can read repository files**
+- **Claude Code** (v2.1.277 and later, when the repository has no `CLAUDE.md`), including nested `AGENTS.md` files as it works in subdirectories
+- **Google Antigravity**, which loads `AGENTS.md` files cumulatively from the edited file's directory up to the workspace root
+- **OpenAI Codex**, **GitHub Copilot**, **Cursor**, and other tools that support the AGENTS.md standard
+
+Agents that only load the root file still find the procedures: the root `AGENTS.md` tells them to read the linked file before starting each task.
 
 The format is tool-agnostic: it's just Markdown with clear headings and procedures.
