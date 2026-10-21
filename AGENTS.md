@@ -1,76 +1,37 @@
 # Agent Instructions for Plus3 IT Repositories
 
-This file provides instructions for AI agents working with Plus3 IT repositories. Every repository created from this template inherits these instructions.
-
+<!-- BEGIN plus3it-shared: shared across Plus3 IT repositories; change it in plus3it/repo-template, then copy it to the others -->
 ## Overview
 
-Plus3 IT repositories follow a standardized structure using tardigrade-ci tooling for development, testing, and releases. Most repositories are hosted on GitHub and use reusable workflows from plus3it/actions-workflows.
+Plus3 IT repositories use tardigrade-ci for linting, testing, and releases. Run `make help` to list every target, and prefer make targets over running tools directly. Repository-specific instructions follow this shared section.
 
 ## Before you finish
 
-Before reporting your work as complete:
-
-1. Run `make lint` to catch formatting and style issues
-2. Run tests as described in the Repository-specific → Testing section
-3. For user-visible changes in repos with `.bumpversion.cfg`:
-    - Update `CHANGELOG.md` following [Keep a Changelog](http://keepachangelog.com/) format
-    - Commit your changes, including the CHANGELOG.md entry
-    - Run the appropriate version bump (`make bumpversion/patch`, `minor`, or `major`), which creates its own commit
-    - Both commits go in the same pull request
-4. Regenerate any maintained documentation (e.g., `make docs/generate` for Terraform module READMEs)
-5. In your final report, list everything a person must still do: pushes, pull requests, applies, account or credential setup, and anything you could not verify
+1. Run `make lint`.
+2. Run the tests described in Repository-specific → Testing.
+3. For user-visible changes in a repository with `.bumpversion.cfg`: add a `CHANGELOG.md` entry ([Keep a Changelog](http://keepachangelog.com/) format) and commit it with your changes, then run `make bumpversion/patch` (or `minor` or `major`), which creates its own commit. Both commits go in the same pull request.
+4. Regenerate any generated docs, for example `make docs/generate` for Terraform module READMEs.
+5. In your final report, list everything a person must still do (pushes, pull requests, applies, account or credential setup) and anything you could not verify.
 
 ## Tooling
 
-Repositories created from this template include tardigrade-ci, a Docker-based test framework that provides standardized make targets for development tasks.
+- `make lint`, `make test`, and `make <lang>/format` (for example, `make terraform/format`).
+- `make docker/run target=<target>` runs a target inside the pinned tardigrade-ci container.
+- The `Dockerfile` line `FROM plus3it/tardigrade-ci:<version>` pins tardigrade-ci, and the Makefile bootstrap clones the same version.
 
-### Available Commands
+## Releases
 
-Run `make help` to see all available targets. Common targets include:
+On GitHub, merging a version bump to the default branch runs `.github/workflows/release.yml`, which creates a release and tag for the new version; GitHub generates the release notes. On other hosts, see Repository-specific → CI/CD.
 
-- `make lint` — Runs all linters (editorconfig, YAML, JSON, shell scripts, Python, Terraform, HCL)
-- `make test` — Runs tests (typically Terraform pytest via mockstack)
-- `make docker/run target=<TARGET>` — Runs a make target inside the tardigrade-ci Docker container
-- `make <lang>/format` — Formats files (e.g., `make python/format`, `make terraform/format`, `make hcl/format`, `make json/format`)
+## Dependency automation
 
-### Docker Image and Makefile
-
-The `Dockerfile` at the repository root pins the tardigrade-ci version with a `FROM plus3it/tardigrade-ci:<version>` line. The repository's dependency bot (Dependabot or Renovate; see Repository Automation) updates this pin. The Makefile bootstrap reads the same pin to clone the matching tardigrade-ci version.
-
-The repository Makefile includes tardigrade-ci's bootstrap:
-
-```makefile
-include $(shell test -f .tardigrade-ci || curl -sSL -o .tardigrade-ci "https://raw.githubusercontent.com/plus3it/tardigrade-ci/master/bootstrap/Makefile.bootstrap"; echo .tardigrade-ci)
-```
-
-This bootstrap automatically clones or updates the tardigrade-ci tooling into a local subdirectory based on the Dockerfile pin.
-
-## Release Process
-
-Use bump2version to increment the version in `.bumpversion.cfg`:
-
-```bash
-make bumpversion/patch   # For bug fixes (1.2.3 → 1.2.4)
-make bumpversion/minor   # For new features (1.2.3 → 1.3.0)
-make bumpversion/major   # For breaking changes (1.2.3 → 2.0.0)
-```
-
-This command updates `current_version` in `.bumpversion.cfg` and commits the change (the config has `commit = True` and `tag = False`). Update `CHANGELOG.md` in the same PR following [Keep a Changelog](http://keepachangelog.com/) format.
-
-On GitHub, when the PR merging the version bump is pushed to the default branch (main or master), the release workflow (`.github/workflows/release.yml`) runs automatically. The workflow creates a GitHub Release and tag named after `current_version` ONLY if that version differs from the latest existing tag. Release notes are generated automatically by GitHub, not extracted from CHANGELOG.md. On other hosts, see Repository-specific → CI/CD for the release process.
-
-## Repository Automation
-
-Dependency updates depend on where the repository is hosted:
-
-- **GitHub**: Dependabot (`.github/dependabot.yml`) opens update PRs, and Mergify (`.mergify.yml`) auto-approves and merges Dependabot PRs. Mergify has no rules for other PRs.
-- **Other hosts (for example, GitLab)**: Renovate (`renovate.json`) opens update merge requests, run by the host's CI. Dependabot and Mergify do not work there.
-
-Check which of these files the repository has before changing dependency automation.
+- **GitHub**: Dependabot (`.github/dependabot.yml`) opens update pull requests, and Mergify (`.mergify.yml`) auto-approves and merges them.
+- **Other hosts (for example, GitLab)**: Renovate (`renovate.json`), run from the host's CI.
 
 ## Formatting
 
-All repositories follow `.editorconfig` rules. Validate formatting with `make ec/lint`.
+Follow `.editorconfig`; check with `make ec/lint`.
+<!-- END plus3it-shared -->
 
 ## What is tardigrade
 
@@ -247,4 +208,4 @@ The Pages site is built from the `docs/` directory. Keep AGENTS.md files and Pag
 
 ### Template Maintenance
 
-Keep the generic sections of this AGENTS.md file (Overview, Tooling, Release Process, Repository Automation, Formatting) in sync with plus3it/repo-template. When repo-template updates those sections, propagate the changes here.
+The block between `<!-- BEGIN plus3it-shared -->` and `<!-- END plus3it-shared -->` at the top of this file is shared with other Plus3 IT repositories. Don't edit it here: change it in plus3it/repo-template, then copy the block here unchanged.
