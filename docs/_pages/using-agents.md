@@ -30,16 +30,25 @@ If a tool you use doesn't read `AGENTS.md`, configure it in your own user settin
 
 # What's in AGENTS.md
 
-AGENTS.md files typically include:
+The root `AGENTS.md` in each repository has two parts:
 
-- **Overview** — What the repository does
-- **Tooling** — How to run linters, tests, and builds (via `make` targets)
-- **Conventions** — File layout, naming conventions, version pins
-- **Procedures** — Step-by-step instructions for common tasks
-- **Safety rules** — Commands that should never be run without human approval
-- **Repository-specific** — Details unique to this deployment (accounts, CI/CD, etc.)
+1. **Committed pointer** — A short section that tells agents to run `make agents/sync` and read `.agents/plus3it/AGENTS.md`, plus core safety rules
+2. **Repository-specific sections** — Details unique to this repository (purpose, accounts, CI/CD, etc.)
 
-For the tardigrade template, there's also a "Maintaining the tardigrade template" section that documents how changes to `tardigrade/` should be reflected in `docs/`.
+For tardigrade, the root `AGENTS.md` also includes:
+- **What is tardigrade** — Overview, architecture layers, glossary
+- **Verify and Build Commands** — How to vendor, lint, validate, and plan
+- **Safety Rules** — Commands that should never be run without human approval
+- **Procedure Index** — Links to nested AGENTS.md files for specific tasks
+- **Maintaining the tardigrade template** — How changes to `tardigrade/` should be reflected in `docs/`
+
+# Shared Instructions
+
+Shared conventions for Plus3 IT repositories (linting, testing, releases, dependency automation) live in the tardigrade-ci repository under `agents/` and are synced at runtime into `.agents/plus3it/AGENTS.md` when an agent runs `make agents/sync`. The sync reads from the tardigrade-ci version the repository already uses (pinned in the `Dockerfile`), so shared changes reach deployment repos when their tardigrade-ci pin is bumped, through the update pull requests Dependabot (GitHub) or Renovate (other hosts) opens.
+
+The `.agents/plus3it/` directory is generated and ignores itself (via `.agents/plus3it/.gitignore`), so no repository needs a `.gitignore` change.
+
+The committed pointer at the top of each repository's `AGENTS.md` comes from plus3it/repo-template and rarely changes.
 
 # Safety Model
 
