@@ -1,6 +1,6 @@
 # Set envs that must be defined before including tardigrade-ci
 SHELL := /bin/bash
-AGENTS_PROFILE := terragrunt-deployment
+AGENTS_PROFILE := tardigrade-deployment
 
 TERRAFORM_VERSION ?= $(shell grep terraform-version $${PWD}/tardigrade/vendor/versions.tf | grep -oE '[0-9]+(\.[0-9]+){1,2}')
 
