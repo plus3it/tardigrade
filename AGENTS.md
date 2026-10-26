@@ -80,13 +80,13 @@ Never run `apply`, `destroy`, `import`, or `state` commands without explicit hum
 
 ### Procedure Index
 
-Detailed instructions for common tasks. Before starting one of these tasks, read the linked file.
+Detailed instructions for common tasks. Before starting one of these tasks, read the linked file. In a deployment, `make agents/sync` writes these files to `.agents/plus3it/tardigrade/` when the repository pins the tardigrade template (see `.github/workflows/dependabot_hack.yml`). In the plus3it/tardigrade template itself, they are in `agents/procedures/`. A short `AGENTS.md` in each of `tardigrade/{stacks,roots,modules,vendor,templates}/` points to the matching file.
 
-- [Add a stack or unit](tardigrade/stacks/AGENTS.md)
-- [Add a root](tardigrade/roots/AGENTS.md)
-- [Add a local module](tardigrade/modules/AGENTS.md)
-- [Add or upgrade a vendor module](tardigrade/vendor/AGENTS.md)
-- [Template conventions](tardigrade/templates/AGENTS.md)
+- Add a stack or unit: `.agents/plus3it/tardigrade/stacks.md` (template: `agents/procedures/stacks.md`)
+- Add a root: `.agents/plus3it/tardigrade/roots.md` (template: `agents/procedures/roots.md`)
+- Add a local module: `.agents/plus3it/tardigrade/modules.md` (template: `agents/procedures/modules.md`)
+- Add or upgrade a vendor module: `.agents/plus3it/tardigrade/vendor.md` (template: `agents/procedures/vendor.md`)
+- Template conventions: `.agents/plus3it/tardigrade/templates.md` (template: `agents/procedures/templates.md`)
 - [Create a new deployment repository](NEW_REPO.md)
 
 ### Using Another Provider or Deployment Type
@@ -167,23 +167,23 @@ List affected units in your final report so a person or CI can plan them.
 
 ## Maintaining the tardigrade template (plus3it/tardigrade only)
 
-This section applies only to the plus3it/tardigrade template repository. When creating a new deployment repository, delete this section and the `docs/` directory (see [NEW_REPO.md](NEW_REPO.md)).
+This section applies only to the plus3it/tardigrade template repository. When creating a new deployment repository, delete this section, the `docs/` directory, and the `agents/` directory (see [NEW_REPO.md](NEW_REPO.md)).
 
 ### Documentation Sync
 
-Any change to files under `tardigrade/` or to AGENTS.md procedures must update the corresponding GitHub Pages documentation in the same PR:
+Any change to files under `tardigrade/` or to a procedure in `agents/procedures/` must update the corresponding GitHub Pages documentation in the same PR:
 
 | File | Pages URL |
 |------|-----------|
 | `AGENTS.md` | https://plus3it.github.io/tardigrade/using-agents/ |
-| `tardigrade/stacks/AGENTS.md` | https://plus3it.github.io/tardigrade/how-to-guide/ |
-| `tardigrade/roots/AGENTS.md` | https://plus3it.github.io/tardigrade/structure/ |
-| `tardigrade/modules/AGENTS.md` | https://plus3it.github.io/tardigrade/create-a-module/ |
-| `tardigrade/vendor/AGENTS.md` | https://plus3it.github.io/tardigrade/structure/ |
-| `tardigrade/templates/AGENTS.md` | https://plus3it.github.io/tardigrade/structure/ |
+| `agents/procedures/stacks.md` | https://plus3it.github.io/tardigrade/how-to-guide/ |
+| `agents/procedures/roots.md` | https://plus3it.github.io/tardigrade/structure/ |
+| `agents/procedures/modules.md` | https://plus3it.github.io/tardigrade/create-a-module/ |
+| `agents/procedures/vendor.md` | https://plus3it.github.io/tardigrade/structure/ and https://plus3it.github.io/tardigrade/create-a-module/ |
+| `agents/procedures/templates.md` | https://plus3it.github.io/tardigrade/structure/ |
 | `NEW_REPO.md` | https://plus3it.github.io/tardigrade/new-repository/ |
 
-The Pages site is built from the `docs/` directory. Keep AGENTS.md files and Pages content consistent: AGENTS.md provides step-by-step procedures for agents; Pages explain concepts and link to the GitHub AGENTS.md files for the steps.
+The Pages site is built from the `docs/` directory. Keep the procedures and Pages content consistent: the procedures give step-by-step instructions for agents; Pages explain concepts and link to the procedures in `agents/procedures/`. The `AGENTS.md` stubs in `tardigrade/*/` never change.
 
 ### Agent Instruction Maintenance
 
@@ -192,3 +192,13 @@ The committed pointer at the top of this file comes from plus3it/repo-template. 
 The shared instructions live in tardigrade-ci `agents/` and are synced at runtime into `.agents/plus3it/AGENTS.md`, pinned to the tardigrade-ci version this repository uses. Changes to shared conventions happen in tardigrade-ci and reach deployment repos when their tardigrade-ci pin is bumped, through the update pull requests Dependabot (GitHub) or Renovate (other hosts) opens.
 
 When updating tardigrade-specific sections (glossary, procedures, etc.) in this file, also update the corresponding Pages documentation.
+
+### Template Procedures
+
+The procedures in `agents/procedures/` (`stacks.md`, `roots.md`, `modules.md`, `vendor.md`, `templates.md`) are released with the template's tags. They describe this layout, so change them in the same PR as the layout change. Deployments read them at a pinned tag: a `uses: plus3it/tardigrade@<tag>` line in `.github/workflows/dependabot_hack.yml` opts a deployment in, and `make agents/sync` (tardigrade-ci 0.31.0 or later) writes the files from that tag to `.agents/plus3it/tardigrade/`. A deployment bumps the pin on purpose, after reading the template CHANGELOG.
+
+- `.bumpversion.cfg` rewrites the pin in `.github/workflows/dependabot_hack.yml` on every version bump, so the pin always equals the released version. A deployment created from the template starts pinned to the version it was created from.
+- The procedure files must be named exactly as above; tardigrade-ci copies every `*.md` in `agents/procedures/`.
+- In a procedure, name another procedure by file name ("`vendor.md`, in the same directory"), not by relative link, because deployments read the files from `.agents/plus3it/tardigrade/`. Paths from the repository root, such as `tardigrade/stacks/`, are valid in a deployment and can stay.
+- The template's own `agents/` directory is removed from new deployments (a step in [NEW_REPO.md](NEW_REPO.md)), because deployments receive the procedures by sync. The `AGENTS.md` stubs in `tardigrade/*/` stay.
+- A major version bump means a layout change; describe the migration in the CHANGELOG.
