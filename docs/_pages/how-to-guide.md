@@ -26,9 +26,9 @@ This quickstart assumes you're starting with the tardigrade template and want to
 
 1. **Create a new deployment repository** — See the [New Repository]({{ "/new-repository/" | relative_url }}) guide for detailed instructions, or follow the steps in [NEW_REPO.md](https://github.com/plus3it/tardigrade/blob/master/NEW_REPO.md).
 
-2. **Add a stack** — Once you have a repository, add your first account (stack) by following the procedure in [stacks/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/stacks/AGENTS.md) under "Add a stack".
+2. **Add a stack** — Once you have a repository, add your first account (stack) by following the procedure in [stacks.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/stacks.md) under "Add a stack".
 
-3. **Add units** — Add units (region + root combinations) for each region and baseline you want to deploy. See "Add a unit" in [stacks/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/stacks/AGENTS.md).
+3. **Add units** — Add units (region + root combinations) for each region and baseline you want to deploy. See "Add a unit" in [stacks.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/stacks.md).
 
 4. **Plan and apply** — From your unit directory, run:
   ```bash
@@ -43,11 +43,11 @@ This quickstart assumes you're starting with the tardigrade template and want to
 
 ## Adding a Stack (New Scope)
 
-A stack represents all infrastructure in a single scope (an AWS account, a GCP project, an Azure subscription, etc.). To add a new scope to your deployment, follow the procedure in [stacks/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/stacks/AGENTS.md) under "Add a stack".
+A stack represents all infrastructure in a single scope (an AWS account, a GCP project, an Azure subscription, etc.). To add a new scope to your deployment, follow the procedure in [stacks.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/stacks.md) under "Add a stack".
 
 ## Adding a Unit (Region/Root)
 
-Units are the deployment targets within an account. Each unit deploys one root module to one region. To add a new unit, follow "Add a unit" in [stacks/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/stacks/AGENTS.md).
+Units are the deployment targets within an account. Each unit deploys one root module to one region. To add a new unit, follow "Add a unit" in [stacks.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/stacks.md).
 
 ## Changing the Baseline
 
@@ -58,7 +58,7 @@ The baseline infrastructure is defined in the root modules under `roots/`. To mo
 3. Run `terragrunt plan` in an affected unit to preview changes
 4. Run `terragrunt apply` to deploy the changes
 
-For adding new external modules to vendor, see [vendor/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/vendor/AGENTS.md).
+For adding new external modules to vendor, see [vendor.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/vendor.md).
 
 ## Things That Move State (Be Careful!)
 

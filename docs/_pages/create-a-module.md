@@ -17,7 +17,7 @@ External modules can come from:
 - Private git repositories
 - Private Terraform registries
 
-External modules are pinned and vendored the same way regardless of source. See [vendor/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/vendor/AGENTS.md) for vendoring procedures.
+External modules are pinned and vendored the same way regardless of source. See [vendor.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/vendor.md) for vendoring procedures.
 
 This guide covers local modules and how to create reusable modules.
 
@@ -45,7 +45,7 @@ Use local modules when:
   }
   ```
 
-For detailed procedures, see [modules/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/modules/AGENTS.md).
+For detailed procedures, see [modules.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/modules.md).
 
 # Reusable Modules
 
@@ -257,7 +257,7 @@ To use an external module in your tardigrade deployment:
   make terraform/lock
   ```
 
-For detailed vendor procedures, see [vendor/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/vendor/AGENTS.md).
+For detailed vendor procedures, see [vendor.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/vendor.md).
 
 # Finding Existing Modules
 

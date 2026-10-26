@@ -40,10 +40,12 @@ For GitLab or other hosts:
 
 3. Remove GitHub-specific files (for non-GitHub hosts):
   ```bash
-  rm -rf .github/
+  rm .github/dependabot.yml .github/workflows/lint.yml .github/workflows/release.yml
   rm .mergify.yml
   ```
-  
+
+  Keep `.github/workflows/dependabot_hack.yml`. It never runs; it records the tardigrade template version this repository matches, and `make agents/sync` reads it. Renovate's default `github-actions` manager also reads `.github/workflows`, so Renovate can propose the bumps.
+
   Dependabot and Mergify only work on GitHub. On other hosts, dependency updates use Renovate (a `renovate.json` at the repository root, run from the host's CI). Set up CI/CD per the Repository-specific → CI/CD section in `AGENTS.md`.
 
 4. Push to your new repository:
@@ -104,6 +106,17 @@ Before running `terragrunt init` in any unit, ensure the backend infrastructure 
 For GCP or other clouds, replace with the appropriate backend (e.g., GCS bucket for GCP).
 
 Terragrunt does not create these implicitly. Either create them yourself, or have a person with management-account credentials run `terragrunt backend bootstrap --working-dir <unit>`, which creates the bucket and lock table from the `remote_state` block in `terragrunt-root.hcl`. See [NEW_REPO.md](https://github.com/plus3it/tardigrade/blob/master/NEW_REPO.md).
+
+# Agent Procedures
+
+The agent procedures live in the template's `agents/procedures/` directory and are released with its tags. A new deployment:
+
+- deletes the template's `agents/` directory (and `docs/`), because it receives the procedures by sync instead;
+- keeps the short `AGENTS.md` stubs in `tardigrade/stacks/`, `tardigrade/roots/`, `tardigrade/modules/`, `tardigrade/vendor/`, and `tardigrade/templates/`;
+- keeps the pin in `.github/workflows/dependabot_hack.yml`, which names the template version the deployment was created from;
+- runs `make agents/sync` after setup and confirms that `.agents/plus3it/tardigrade/` exists. This needs tardigrade-ci 0.31.0 or later: bump the `Dockerfile` pin to 0.31.0 or later if it is older.
+
+If the template is hosted at a mirror, a person edits the project in the pin line (`uses: <mirror-project-path>@<tag>`) and sets `TARDIGRADE_GIT_URL` in the `Makefile`. The sync derives the project it looks for in the pin file from that URL, so the two must match. See [Using AI Agents]({{ "/using-agents/" | relative_url }}).
 
 # Versioning and Release Automation
 
