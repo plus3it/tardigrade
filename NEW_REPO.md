@@ -68,9 +68,11 @@ git checkout -b initial-setup
 For hosts other than GitHub, remove files that only work on GitHub:
 
 ```bash
-rm -rf .github/
+rm .github/dependabot.yml .github/workflows/lint.yml .github/workflows/release.yml
 rm .mergify.yml
 ```
+
+Keep `.github/workflows/dependabot_hack.yml`. It is not a working workflow (it never runs). It records the tardigrade template version this repository matches, and `make agents/sync` reads it. Renovate's default `github-actions` manager also reads `.github/workflows`, so Renovate can propose the bumps.
 
 Dependabot and Mergify only work on GitHub. On other hosts, dependency updates use Renovate: add a `renovate.json` at the repository root and run Renovate from the host's CI. Record the setup in AGENTS.md under Repository-specific → CI/CD.
 
@@ -138,13 +140,15 @@ Note: `GLOBAL_REGION` and `MANAGEMENT_ACCOUNT_ID` substitute placeholders in the
 
 Repeat similar edits for `aws-cn` or other partitions.
 
-### 2. Delete Documentation and Template Maintenance Section
+### 2. Delete Documentation, Template Procedures, and Template Maintenance Section
 
-The `docs/` directory and the "Maintaining the tardigrade template" section in `AGENTS.md` apply only to the plus3it/tardigrade template repository. Remove them from deployment repositories:
+The `docs/` directory, the `agents/` directory, and the "Maintaining the tardigrade template" section in `AGENTS.md` apply only to the plus3it/tardigrade template repository. Remove them from deployment repositories:
 
 ```bash
-rm -rf docs/
+rm -rf docs/ agents/
 ```
+
+The `agents/` directory holds the template's agent procedures. A deployment does not keep its own copy: `make agents/sync` writes them to `.agents/plus3it/tardigrade/` from the template version pinned in `.github/workflows/dependabot_hack.yml` (see step 7). Keep the short `AGENTS.md` stubs in `tardigrade/stacks/`, `tardigrade/roots/`, `tardigrade/modules/`, `tardigrade/vendor/`, and `tardigrade/templates/`; they point to the synced files.
 
 Edit `AGENTS.md` and delete the entire "Maintaining the tardigrade template (plus3it/tardigrade only)" section (from the heading to the end of the file).
 
@@ -236,9 +240,27 @@ terragrunt backend bootstrap --working-dir tardigrade/stacks/<partition>/<scope_
 
 This creates the bucket and lock table from the `remote_state` block in `terragrunt-root.hcl`, including its encryption and tags. Agents prepare this command; they do not run it.
 
-### 7. Add the First Stacks
+### 7. Sync the Agent Procedures
 
-Follow the instructions in [tardigrade/stacks/AGENTS.md](tardigrade/stacks/AGENTS.md) to onboard your first AWS accounts.
+The agent procedures (`stacks.md`, `roots.md`, `modules.md`, `vendor.md`, `templates.md`) come from the tardigrade template at the tag pinned in `.github/workflows/dependabot_hack.yml`. The template sets that pin to its own version when it is released, so a new repository starts pinned to the layout it was created from. Do not change the pin unless you have also changed the layout to match a newer template version.
+
+This needs tardigrade-ci 0.31.0 or later. Check the `FROM plus3it/tardigrade-ci:` line in the `Dockerfile`, and bump the Dockerfile pin to 0.31.0 or later if it is older. Then run:
+
+```bash
+make agents/sync
+ls .agents/plus3it/tardigrade/
+```
+
+Confirm that the directory exists and holds the five procedure files. It is not committed (a `.gitignore` in `.agents/plus3it/` ignores it); run `make agents/sync` again whenever the pin or the tardigrade-ci version changes.
+
+If the template is hosted at a mirror rather than at github.com/plus3it/tardigrade (a person decides this):
+
+- Edit the project in the pin line of `.github/workflows/dependabot_hack.yml`, for example `uses: plus3it/tardigrade@<tag>` becomes `uses: <mirror-project-path>@<tag>`.
+- Set `TARDIGRADE_GIT_URL` in the `Makefile`, before the `include` line, to the mirror's clone URL. The sync derives the project it looks for in the pin file from this URL, by removing a trailing `/` and `.git`, then the scheme and host (or the `user@host:` of an scp-style URL), and a leading `/`. For example, `git@git.example.com:mirrors/tardigrade.git` gives `mirrors/tardigrade`. The two must match, or the sync finds no pin and writes only the general instructions.
+
+### 8. Add the First Stacks
+
+Follow the instructions in `.agents/plus3it/tardigrade/stacks.md` to onboard your first AWS accounts.
 
 Typically, start with the management account:
 
@@ -252,7 +274,7 @@ cp -r tardigrade/templates/management/global/management \
 
 Edit the YAML and Terragrunt files to replace any remaining placeholders and fill in account-specific values.
 
-### 8. Validate
+### 9. Validate
 
 ```bash
 make terraform/vendor
@@ -260,7 +282,7 @@ make lint
 make terraform/validate-roots
 ```
 
-### 9. Commit and Open a PR (a person does this)
+### 10. Commit and Open a PR (a person does this)
 
 ```bash
 git rm NEW_REPO.md  # This file is only used once, during repository creation

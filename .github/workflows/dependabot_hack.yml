@@ -1,0 +1,32 @@
+# Track the tardigrade template version with Dependabot (or Renovate)
+
+# The `uses:` line below records the version of the tardigrade template whose
+# layout this repository matches. `make agents/sync` (tardigrade-ci 0.31.0 or
+# later) reads the tag from this file with `grep` and writes the template's
+# procedures for that tag to `.agents/plus3it/tardigrade/`. Dependabot proposes
+# a bump whenever the template publishes a release.
+
+# GitHub prevents services like Mergify from automatically merging pull requests
+# that modify `.github/workflows`. That is intended here: a person reviews each
+# bump against the template CHANGELOG, and changes the repository to match the
+# new layout before merging it, so the instructions never describe a layout this
+# repository does not have.
+
+# In the plus3it/tardigrade template itself, `.bumpversion.cfg` keeps this line
+# equal to the released version. If the template is hosted at a mirror, change
+# `plus3it/tardigrade` to the mirror's project path and set `TARDIGRADE_GIT_URL`
+# in the Makefile (see NEW_REPO.md).
+name: Dependabot hack
+on:
+  push:
+    branches:
+      - never-trigger-this-dependabot-hack-workflow
+
+jobs:
+  dependabot_hack:
+    name: Track the tardigrade template version with Dependabot
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo "This workflow is only for Dependabot to track the tardigrade template version. It should never be triggered manually or by other workflows." && exit 1
+
+      - uses: plus3it/tardigrade@0.1.0
