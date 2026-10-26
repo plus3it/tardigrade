@@ -10,15 +10,17 @@ Tardigrade repositories include instructions for AI agents to assist with common
 
 # AGENTS.md Files
 
-Each tardigrade repository contains an `AGENTS.md` file at the root. Some repositories have nested `AGENTS.md` files in subdirectories for layer-specific procedures:
+Each tardigrade repository contains an `AGENTS.md` file at the root. The procedures for layer-specific tasks are released with the tardigrade template, in `agents/procedures/`, and deployments read them at the template version they pin:
 
 - `AGENTS.md` — Root instructions, conventions, and cross-repository standards
-- `tardigrade/stacks/AGENTS.md` — Procedures for adding stacks (accounts) and units
-- `tardigrade/roots/AGENTS.md` — Procedures for adding root modules
-- `tardigrade/modules/AGENTS.md` — Guidelines for local modules
-- `tardigrade/vendor/AGENTS.md` — Procedures for vendoring external modules
-- `tardigrade/templates/AGENTS.md` — Template conventions
+- `stacks.md` — Procedures for adding stacks (accounts) and units
+- `roots.md` — Procedures for adding root modules
+- `modules.md` — Guidelines for local modules
+- `vendor.md` — Procedures for vendoring external modules
+- `templates.md` — Template conventions
 - `NEW_REPO.md` — Step-by-step procedure for creating a new deployment repository
+
+In the plus3it/tardigrade template, the procedures are in `agents/procedures/`. In a deployment, `make agents/sync` writes them to `.agents/plus3it/tardigrade/`. A short stub `AGENTS.md` in each of `tardigrade/stacks/`, `tardigrade/roots/`, `tardigrade/modules/`, `tardigrade/vendor/`, and `tardigrade/templates/` tells agents (and keeps the directory-level loading of tools such as Claude Code and Antigravity) to read the matching file before changing that directory. The stubs never change.
 
 These files are written for AI agents, but humans can read them too.
 
@@ -39,7 +41,7 @@ For tardigrade, the root `AGENTS.md` also includes:
 - **What is tardigrade** — Overview, architecture layers, glossary
 - **Verify and Build Commands** — How to vendor, lint, validate, and plan
 - **Safety Rules** — Commands that should never be run without human approval
-- **Procedure Index** — Links to nested AGENTS.md files for specific tasks
+- **Procedure Index** — Where to find the procedure file for each task, in a deployment and in the template
 - **Maintaining the tardigrade template** — How changes to `tardigrade/` should be reflected in `docs/`
 
 # Shared Instructions
@@ -49,6 +51,15 @@ Shared conventions for Plus3 IT repositories (linting, testing, releases, depend
 The `.agents/plus3it/` directory is generated and ignores itself (via `.agents/plus3it/.gitignore`), so no repository needs a `.gitignore` change.
 
 The committed pointer at the top of each repository's `AGENTS.md` comes from plus3it/repo-template and rarely changes.
+
+# Template Procedures
+
+The tardigrade procedures describe the template's layout, so they are released with the template rather than with tardigrade-ci:
+
+- **Pin.** A deployment records the template version whose layout it matches in `.github/workflows/dependabot_hack.yml`, as a `uses: plus3it/tardigrade@<tag>` line. The workflow never runs; the line exists so that Dependabot (or Renovate, on other hosts) proposes a bump when the template publishes a release. A person reviews each bump against the template CHANGELOG and updates the deployment to match, because the instructions must not describe a layout the deployment does not have.
+- **Sync.** `make agents/sync` (tardigrade-ci 0.31.0 or later) reads the pin and writes the five procedure files from that tag to `.agents/plus3it/tardigrade/`. Without a pin, only the general instructions are written.
+- **Mirrors.** A deployment that hosts the template elsewhere writes the mirror's project path in the pin line and sets `TARDIGRADE_GIT_URL` in the `Makefile`. The sync derives the project name it looks for from that URL.
+- **New repositories.** A deployment deletes the template's `agents/` directory (the procedures arrive by sync) and keeps the stubs. See [New Repository]({{ "/new-repository/" | relative_url }}).
 
 # Safety Model
 
@@ -66,18 +77,18 @@ Document this in your deployment's AGENTS.md under "Safety rules".
 
 # Where Procedures Live
 
-Task-specific procedures are split across the nested AGENTS.md files:
+Task-specific procedures are separate files in `agents/procedures/` in the template (and `.agents/plus3it/tardigrade/` in a deployment, after `make agents/sync`). The links below go to the template's copy:
 
 | Task | File |
 |------|------|
 | Create a new deployment repo | [NEW_REPO.md](https://github.com/plus3it/tardigrade/blob/master/NEW_REPO.md) |
-| Add a stack (account) | [stacks/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/stacks/AGENTS.md) |
-| Add a unit (region/root) | [stacks/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/stacks/AGENTS.md) |
-| Add a root module | [roots/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/roots/AGENTS.md) |
-| Add a local module | [modules/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/modules/AGENTS.md) |
-| Vendor an external module | [vendor/AGENTS.md](https://github.com/plus3it/tardigrade/blob/master/tardigrade/vendor/AGENTS.md) |
+| Add a stack (account) | [stacks.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/stacks.md) |
+| Add a unit (region/root) | [stacks.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/stacks.md) |
+| Add a root module | [roots.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/roots.md) |
+| Add a local module | [modules.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/modules.md) |
+| Vendor an external module | [vendor.md](https://github.com/plus3it/tardigrade/blob/master/agents/procedures/vendor.md) |
 
-The root AGENTS.md file provides an index and links to these nested files.
+The root AGENTS.md file provides an index of these files.
 
 # Using Agents Effectively
 
@@ -110,19 +121,19 @@ If the agent's first attempt has errors, provide the error message and ask it to
 
 If you're maintaining the plus3it/tardigrade template itself:
 
-Any change under `tardigrade/` or to an AGENTS.md procedure must update the corresponding `docs/` page in the same PR:
+Any change under `tardigrade/` or to a procedure in `agents/procedures/` must update the corresponding `docs/` page in the same PR:
 
 | File/Directory | Mapped Page |
 |----------------|-------------|
 | `AGENTS.md` | [using-agents.md]({{ "/using-agents/" | relative_url }}) |
-| `tardigrade/stacks/AGENTS.md` | [how-to-guide.md]({{ "/how-to-guide/" | relative_url }}) |
-| `tardigrade/roots/AGENTS.md` | [structure.md]({{ "/structure/" | relative_url }}) |
-| `tardigrade/modules/AGENTS.md` | [create-a-module.md]({{ "/create-a-module/" | relative_url }}) |
-| `tardigrade/vendor/AGENTS.md` | [structure.md]({{ "/structure/" | relative_url }}) |
-| `tardigrade/templates/AGENTS.md` | [structure.md]({{ "/structure/" | relative_url }}) |
+| `agents/procedures/stacks.md` | [how-to-guide.md]({{ "/how-to-guide/" | relative_url }}) |
+| `agents/procedures/roots.md` | [structure.md]({{ "/structure/" | relative_url }}) |
+| `agents/procedures/modules.md` | [create-a-module.md]({{ "/create-a-module/" | relative_url }}) |
+| `agents/procedures/vendor.md` | [structure.md]({{ "/structure/" | relative_url }}) and [create-a-module.md]({{ "/create-a-module/" | relative_url }}) |
+| `agents/procedures/templates.md` | [structure.md]({{ "/structure/" | relative_url }}) |
 | `NEW_REPO.md` | [new-repository.md]({{ "/new-repository/" | relative_url }}) |
 
-This keeps the human-facing documentation in sync with the agent instructions.
+The stubs in `tardigrade/*/AGENTS.md` never change. This keeps the human-facing documentation in sync with the agent instructions.
 
 # Supported Tools
 
