@@ -118,7 +118,7 @@ Terragrunt and Terraform merge configuration inputs in this order (later values 
     - `partition`: from the parent directory name
     - `global_region`: from `terragrunt-root.hcl` local
     - `session_name`: from `AWS_ROLE_SESSION_NAME` environment variable
-    - `default_tags`: generated tags including state paths
+    - `default_tags`: generated tags, including state paths and the `TardigradeManaged` marker
 5. Unit-level `inputs` block in the unit's `terragrunt.hcl` — unit-specific overrides
 6. `terraform.tfvars` in the unit directory — auto-loaded by Terraform. This overrides Terragrunt's inputs because Terraform loads `terraform.tfvars` after processing the TF_VAR_* environment variables that Terragrunt sets.
 

@@ -92,12 +92,13 @@ locals {
   backend_lock_table = "{{repo_name}}-tfstate-lock"
 
   tags = {
-    RepoCloneUrl     = "{{repo_url}}.git"
-    RepoConsoleUrl   = "{{repo_url}}"
-    RepoName         = "{{repo_name}}"
-    TfstateBucket    = local.backend_bucket
-    TfstateKey       = "tfstate/${path_relative_to_include()}/terraform.tfstate"
-    TfstateLockTable = local.backend_lock_table
+    RepoCloneUrl      = "{{repo_url}}.git"
+    RepoConsoleUrl    = "{{repo_url}}"
+    RepoName          = "{{repo_name}}"
+    TardigradeManaged = "true"
+    TfstateBucket     = local.backend_bucket
+    TfstateKey        = "tfstate/${path_relative_to_include()}/terraform.tfstate"
+    TfstateLockTable  = local.backend_lock_table
   }
 
   global_vars = yamldecode(file(find_in_parent_folders("globals.tfvars.yaml")))
