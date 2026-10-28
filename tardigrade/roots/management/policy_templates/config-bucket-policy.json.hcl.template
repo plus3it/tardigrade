@@ -33,7 +33,7 @@ ${jsonencode({
                 "Service": "config.amazonaws.com"
             },
             "Resource": "arn:${partition}:s3:::${bucket}/AWSLogs/*",
-            "Sid": " AWSConfigBucketDelivery"
+            "Sid": "AWSConfigBucketDelivery"
         }
     ],
     "Version": "2012-10-17"
