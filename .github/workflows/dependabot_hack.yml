@@ -29,4 +29,4 @@ jobs:
     steps:
       - run: echo "This workflow is only for Dependabot to track the tardigrade template version. It should never be triggered manually or by other workflows." && exit 1
 
-      - uses: plus3it/tardigrade@0.1.0
+      - uses: plus3it/tardigrade@0.2.0
