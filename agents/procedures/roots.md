@@ -34,7 +34,7 @@ Roots receive inputs from Terragrunt's merged YAML configuration and computed va
 - `region` (string) — AWS region, extracted from the unit path
 - `partition` (string) — AWS partition (`aws`, `aws-us-gov`, etc.), from the parent directory name
 - `session_name` (string, nullable) — From `AWS_ROLE_SESSION_NAME` environment variable
-- `default_tags` (map of strings) — Generated tags including repository info and state paths
+- `default_tags` (map of strings) — Generated tags: repository info, state paths, and the `TardigradeManaged` marker
 
 For other providers, the scope ID variable name and computed values will differ based on the implementation in `terragrunt-root.hcl`.
 

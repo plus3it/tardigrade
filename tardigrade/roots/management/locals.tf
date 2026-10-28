@@ -10,11 +10,6 @@ locals {
 
   account_name = lower(replace(var.account_name, "_", "-"))
   namespace    = lower(replace("${var.namespace}-${var.account_name}", "_", "-"))
-  tags         = merge(var.tags, local.mandatory_tags)
-
-  mandatory_tags = {
-    TardigradeManaged = "true"
-  }
 
   buckets = [for bucket in [
     {
@@ -36,7 +31,6 @@ locals {
   ] : merge(local.bucket_defaults, bucket)]
 
   bucket_defaults = {
-    tags       = local.tags
     versioning = true
     public_access_block = {
       block_public_acls       = true
