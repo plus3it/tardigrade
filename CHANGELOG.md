@@ -16,6 +16,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 *   Vendors each external module in its own directory, and lists the directories each root uses in `.tardigrade.config.yaml` ([#261](https://github.com/plus3it/tardigrade/pull/261))
 *   Updates the example roots for the interfaces of the pinned module versions, and gates global-only resources with `is_global` ([#261](https://github.com/plus3it/tardigrade/pull/261))
 *   Applies the `TardigradeManaged` tag through the provider `default_tags` in `terragrunt-root.hcl`, and removes the unused `tags` variable from the example roots ([#261](https://github.com/plus3it/tardigrade/pull/261))
+*   Fixes the `Sid` of the Config bucket policy, which had a leading space that S3 rejects ([#261](https://github.com/plus3it/tardigrade/pull/261))
 *   Adds agent instructions in `AGENTS.md`, with the procedures in `agents/procedures/`; `make agents/sync` (tardigrade-ci 0.31.0 or later) writes them to `.agents/plus3it/tardigrade/` at the template version that a deployment pins ([#261](https://github.com/plus3it/tardigrade/pull/261))
 *   Adds the pin `uses: plus3it/tardigrade@<version>` in `.github/workflows/dependabot_hack.yml`, which `.bumpversion.cfg` updates on each release ([#261](https://github.com/plus3it/tardigrade/pull/261))
 *   Rewrites the GitHub Pages docs, adds `NEW_REPO.md`, and generalizes the description of tardigrade beyond AWS account baselines ([#261](https://github.com/plus3it/tardigrade/pull/261))
