@@ -20,7 +20,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 *   Adds agent instructions in `AGENTS.md`, with the procedures in `agents/procedures/`; `make agents/sync` (tardigrade-ci 0.31.0 or later) writes them to `.agents/plus3it/tardigrade/` at the template version that a deployment pins ([#261](https://github.com/plus3it/tardigrade/pull/261))
 *   Adds the pin `uses: plus3it/tardigrade@<version>` in `.github/workflows/dependabot_hack.yml`, which `.bumpversion.cfg` updates on each release ([#261](https://github.com/plus3it/tardigrade/pull/261))
 *   Rewrites the GitHub Pages docs, adds `NEW_REPO.md`, and generalizes the description of tardigrade beyond AWS account baselines ([#261](https://github.com/plus3it/tardigrade/pull/261))
-*   Bumps tardigrade-ci to 0.31.0 ([#261](https://github.com/plus3it/tardigrade/pull/261))
+*   Bumps tardigrade-ci to 0.32.0 ([#262](https://github.com/plus3it/tardigrade/pull/262))
 
 ### 0.1.0
 
