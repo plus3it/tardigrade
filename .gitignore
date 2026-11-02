@@ -8,6 +8,10 @@
 # Local .terragrunt-cache directories
 .terragrunt-cache/
 
+# Terraform lock files (except vendor)
+.terraform.lock.hcl
+!tardigrade/vendor/.terraform.lock.hcl
+
 # Jekyll files
 _site/
 .jekyll-cache/
@@ -23,3 +27,7 @@ tardigrade-ci/
 
 #macOS local dir meta file
 .DS_Store
+
+# Temporary files written by make terraform/validate-roots
+tardigrade/roots/*/_providers.tf
+tardigrade/roots/*/_versions.tf
