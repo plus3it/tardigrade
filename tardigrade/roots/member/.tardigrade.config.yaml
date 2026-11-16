@@ -1,0 +1,7 @@
+dependency_globs:
+  - vendor/cloudtrail/**
+  - vendor/config/**
+  - vendor/ebs_encryption/**
+  - vendor/guardduty/**
+  - vendor/iam_account/**
+  - vendor/security_hub_member/**

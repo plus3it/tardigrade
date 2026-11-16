@@ -6,23 +6,19 @@ sidebar:
 ---
 
 # Overview
-Tardigrade is a multi-cloud account provisioning and maintenance framework built
-with Terragrunt and Terraform. Currently, this implementation demonstrates the
-ability to manage AWS accounts, but can easily be extended to manage accounts on
-other cloud platforms.
+Tardigrade is a repository structure and conventions for Terragrunt + Terraform deployments that works with any Terraform provider. It's used for whole-account baselines (most often AWS) and for single-application deployments (for example, on GCP).
+
+The framework provides a layered structure for managing infrastructure deployments across multiple scopes, regions, and partitions. This template ships an AWS account-baseline example (management and member roots) that demonstrates managing multiple AWS accounts across partitions (commercial, GovCloud, China).
 
 # Prerequisites
-* [terraform >= 0.12](https://www.terraform.io/)
-  - credentials configured for an AWS account
-* [terragrunt >= v0.21](https://github.com/gruntwork-io/terragrunt)
 
-# How To Use
-You can use the following command to see the baseline infrastructure deployed to
-your account:
+Tool versions are pinned in `.mise.toml`. Install [mise](https://mise.jdx.dev/) to ensure you're using the correct versions:
 
+```bash
+mise install
 ```
-terragrunt plan --terragrunt-working-dir tardigrade/configs/aws/{account_id}/base
-```
+
+You'll also need AWS credentials configured through the standard AWS credential chain (AWS_PROFILE, environment variables, or CI OIDC).
 
 # Terraform Modules
 As part of creating a baseline configuration for cloud accounts we have created

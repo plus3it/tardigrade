@@ -1,0 +1,6 @@
+[tools]
+terraform = "1.16.6"
+
+terragrunt = "1.1.5"
+
+yq = "4.53.6"

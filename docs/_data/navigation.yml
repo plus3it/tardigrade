@@ -12,12 +12,22 @@ main:
 docs:
   - title: Getting Started
     children:
+      - title: "New Repository"
+        url: /new-repository/
       - title: "How-To-Guide"
         url: /how-to-guide/
       - title: "Structure"
         url: /structure/
       - title: "FAQs"
         url: /frequently-asked-questions/
+  - title: Guides
+    children:
+      - title: "Creating a Module"
+        url: /create-a-module/
+      - title: "CI/CD"
+        url: /ci-cd/
+      - title: "Using AI Agents"
+        url: /using-agents/
   - title: Modules
     children:
       - title: "GitHub"
