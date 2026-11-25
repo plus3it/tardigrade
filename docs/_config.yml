@@ -19,7 +19,7 @@ locale: "en-US"
 title: "Tardigrade"
 title_separator: "-"
 subtitle:  # site tagline that appears below site title in masthead
-name: "Plus3IT"
+name: "Plus3 IT"
 description: "Tardigrade Framework"
 url: "https://plus3it.github.io/tardigrade"
 repository: "plus3it/tardigrade"
